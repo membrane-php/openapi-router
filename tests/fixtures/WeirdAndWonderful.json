@@ -1,0 +1,128 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Weird and Wonderful API",
+    "description": "A sample API designed to be anything but standard."
+  },
+  "servers": [
+    {
+      "url": ""
+    },
+    {
+      "url": "/"
+    },
+    {
+      "url": "/v1"
+    },
+    {
+      "url": "http://wonderful.io"
+    },
+    {
+      "url": "http://wonderful.io/and"
+    },
+    {
+      "url": "http://weird.io/{conjunction}",
+      "variables": {
+        "conjunction": {
+          "default": "and",
+          "description": "A conjunction word such as 'and', 'but', 'or', etc."
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/and/{name}": {
+      "servers": [
+        {
+          "url": "http://weirder.co.uk"
+        }
+      ],
+      "get": {
+        "operationId": "get-and",
+        "servers": [
+          {
+            "url": "http://weirdest.com"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post-and",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put-and",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/or": {
+      "post": {
+        "operationId": "post-or",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/xor": {
+      "delete": {
+        "operationId": "delete-xor",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/however": {
+      "servers": [
+        {
+          "url": "http://weirdest.com"
+        }
+      ],
+      "get": {
+        "operationId": "get-however",
+        "servers": [
+          {
+            "url": "http://weirder.co.uk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post-however",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "operationId": "put-however",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  }
+}
