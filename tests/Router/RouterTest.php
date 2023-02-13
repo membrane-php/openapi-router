@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Router;
 
+use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Membrane\OpenAPIRouter\Router\Router
- */
+#[CoversClass(Router::class)]
+#[CoversClass(CannotRouteRequest::class)]
 class RouterTest extends TestCase
 {
     private function getPetStoreRouteCollection(): RouteCollection
@@ -25,7 +28,7 @@ class RouterTest extends TestCase
                             ],
                         ],
                         'dynamic' => [
-                            'regex' => '#^(?|/pets/([^/])(*MARK:/pets/{id}))$#',
+                            'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
                             'paths' => [
                                 '/pets/{id}' => [
                                     'get' => 'find pet by id',
@@ -50,53 +53,204 @@ class RouterTest extends TestCase
         ]);
     }
 
-//    public function unsuccessfulRouteProvider(): array
-//    {
-//        $petStoreOperationCollection = new OperationCollection(
-//            new Operation(['http://petstore.swagger.io/api'], '/pets', 'get', 'findPets'),
-//            new Operation(['http://petstore.swagger.io/api'], '/pets', 'post', 'addPet'),
-//            new Operation(['http://petstore.swagger.io/api'], '/pets/{id}', 'get', 'find pet by id'),
-//            new Operation(['http://petstore.swagger.io/api'], '/pets/{id}', 'delete', 'deletePet'),
-//        );
-//
-//        return [
-//            'petstore-expanded: incorrect server url' => [
-//                CannotProcessRequest::serverNotFound('https://hatshop.dapper.net/api/pets'),
-//                'https://hatshop.dapper.net/api/pets',
-//                'get',
-//                $petStoreOperationCollection,
-//            ],
-//            'petstore-expanded: correct server url but incorrect path' => [
-//                CannotProcessRequest::pathNotFound('/hats'),
-//                'http://petstore.swagger.io/api/hats',
-//                'get',
-//                $petStoreOperationCollection,
-//            ],
-//            'petstore-expanded: correct url but incorrect method' => [
-//                CannotProcessRequest::methodNotFound('delete'),
-//                'http://petstore.swagger.io/api/pets',
-//                'delete',
-//                $petStoreOperationCollection,
-//            ],
-//        ];
-//    }
-//
-//    /**
-//     * @test
-//     * @dataProvider unsuccessfulRouteProvider
-//     */
-//    public function unsuccessfulRouteTest(
-//        CannotProcessRequest $expected,
-//        string $path,
-//        string $method,
-//        OperationCollection $operationCollection
-//    ): void {
-//        $sut = new Router($operationCollection);
-//
-//        self::expectExceptionObject($expected);
-//
-//        $sut->route($path, $method);
-//    }
+    private function getWeirdAndWonderfulRouteCollection(): RouteCollection
+    {
+        return new RouteCollection([
+            'hosted' => [
+                'static' => [
+                    'http://weirdest.com' => [
+                        'static' => [
+                            '/however' => [
+                                'put' => 'put-however',
+                                'post' => 'post-however',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
+                            'paths' => [
+                                '/and/{name}' => [
+                                    'get' => 'get-and',
+                                ],
+                            ],
+                        ],
+                    ],
+                    'http://weirder.co.uk' => [
+                        'static' => [
+                            '/however' => [
+                                'get' => 'get-however',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
+                            'paths' => [
+                                '/and/{name}' => [
+                                    'put' => 'put-and',
+                                    'post' => 'post-and',
+                                ],
+                            ],
+                        ],
+                    ],
+                    'http://wonderful.io' => [
+                        'static' => [
+                            '/or' => [
+                                'post' => 'post-or',
+                            ],
+                            '/xor' => [
+                                'delete' => 'delete-xor',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|)$#',
+                            'paths' => [],
+                        ],
+                    ],
+                    'http://wonderful.io/and' => [
+                        'static' => [
+                            '/or' => [
+                                'post' => 'post-or',
+                            ],
+                            '/xor' => [
+                                'delete' => 'delete-xor',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|)$#',
+                            'paths' => [],
+                        ],
+                    ],
+                    'http://wonderful.io/or' => [
+                        'static' => [
+                            '/or' => [
+                                'post' => 'post-or',
+                            ],
+                            '/xor' => [
+                                'delete' => 'delete-xor',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|)$#',
+                            'paths' => [],
+                        ],
+                    ],
+                ],
+                'dynamic' => [
+                    'regex' => '#^(?|http://weird.io/([^/]+)(*MARK:http://weird.io/{conjunction}))#',
+                    'servers' => [
+                        'http://weird.io/{conjunction}' => [
+                            'static' => [
+                                '/or' => [
+                                    'post' => 'post-or',
+                                ],
+                                '/xor' => [
+                                    'delete' => 'delete-xor',
+                                ],
+                            ],
+                            'dynamic' => [
+                                'regex' => '#^(?|)$#',
+                                'paths' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'hostless' => [
+                'static' => [
+                    '' => [
+                        'static' => [
+                            '/or' => [
+                                'post' => 'post-or',
+                            ],
+                            '/xor' => [
+                                'delete' => 'delete-xor',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|)$#',
+                            'paths' => [],
+                        ],
+                    ],
+                    '/v1' => [
+                        'static' => [
+                            '/or' => [
+                                'post' => 'post-or',
+                            ],
+                            '/xor' => [
+                                'delete' => 'delete-xor',
+                            ],
+                        ],
+                        'dynamic' => [
+                            'regex' => '#^(?|)$#',
+                            'paths' => [],
+                        ],
+                    ],
+                ],
+                'dynamic' => [
+                    'regex' => '#^(?|/([^/]+)(*MARK:/{version}))#',
+                    'servers' => [
+                        '/{version}' => [
+                            'static' => [
+                                '/or' => [
+                                    'post' => 'post-or',
+                                ],
+                                '/xor' => [
+                                    'delete' => 'delete-xor',
+                                ],
+                            ],
+                            'dynamic' => [
+                                'regex' => '#^(?|)$#',
+                                'paths' => [],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function unsuccessfulRouteProvider(): array
+    {
+        return [
+            'petstore-expanded: incorrect server url' => [
+                CannotRouteRequest::notFound(),
+                'https://hatshop.dapper.net/api/pets',
+                'get',
+                $this->getPetStoreRouteCollection(),
+            ],
+            'petstore-expanded: correct static server url but incorrect path' => [
+                CannotRouteRequest::notFound(),
+                'http://petstore.swagger.io/api/hats',
+                'get',
+                $this->getPetStoreRouteCollection(),
+            ],
+            'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
+                CannotRouteRequest::notFound(),
+                'http://weird.io/however/but',
+                'get',
+                $this->getWeirdAndWonderfulRouteCollection(),
+            ],
+            'petstore-expanded: correct url but incorrect method' => [
+                CannotRouteRequest::methodNotAllowed(),
+                'http://petstore.swagger.io/api/pets',
+                'delete',
+                $this->getPetStoreRouteCollection(),
+            ],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('unsuccessfulRouteProvider')]
+    public function unsuccessfulRouteTest(
+        CannotRouteRequest $expected,
+        string $path,
+        string $method,
+        RouteCollection $operationCollection
+    ): void {
+        $sut = new Router($operationCollection);
+
+        self::expectExceptionObject($expected);
+
+        $sut->route($path, $method);
+    }
 
     public function successfulRouteProvider(): array
     {
@@ -119,13 +273,35 @@ class RouterTest extends TestCase
                 'delete',
                 $this->getPetStoreRouteCollection(),
             ],
+            'WeirdAndWonderful: /v1/or path, post method' => [
+                'post-or',
+                '/v1/or',
+                'post',
+                $this->getWeirdAndWonderfulRouteCollection(),
+            ],
+            'WeirdAndWonderful: http://www.arbitrary.com/v1/or path, post method' => [
+                'post-or',
+                '/v1/or',
+                'post',
+                $this->getWeirdAndWonderfulRouteCollection(),
+            ],
+            'WeirdAndWonderful: http://weird.io/however/or path, post method' => [
+                'post-or',
+                'http://weird.io/however/or',
+                'post',
+                $this->getWeirdAndWonderfulRouteCollection(),
+            ],
+            'WeirdAndWonderful: /{version}/xor path, delete method' => [
+                'delete-xor',
+                '/12/xor',
+                'delete',
+                $this->getWeirdAndWonderfulRouteCollection(),
+            ],
         ];
     }
 
-    /**
-     * @test
-     * @dataProvider successfulRouteProvider
-     */
+    #[Test]
+    #[DataProvider('successfulRouteProvider')]
     public function successfulRouteTest(
         string $expected,
         string $path,

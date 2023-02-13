@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Router;
 
+use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 
 class Router
 {
+    private int $errorCode = 404;
+
     public function __construct(
         private readonly RouteCollection $routeCollection
     ) {
@@ -15,84 +18,112 @@ class Router
 
     public function route(string $url, string $method): string
     {
-        // Check hosted static servers first
-        $hostedStaticServers = $this->routeCollection->routes['hosted']['static'];
-        uksort($hostedStaticServers, fn($a, $b) => strlen($a) <=> strlen($b));
+        $hostedMatch = $this->routeServer($this->routeCollection->routes['hosted'], $url, $method);
+        if ($hostedMatch !== null) {
+            return $hostedMatch;
+        }
 
-        foreach ($hostedStaticServers as $hostedStaticServer => $paths) {
-            $matchingOperationId = $this->routePath($hostedStaticServer, $paths, $url, $method);
-            if ($matchingOperationId !== null) {
-                return $matchingOperationId;
+        $hostlessUrl = parse_url($url, PHP_URL_PATH);
+        if ($hostlessUrl !== null && $hostlessUrl !== false) {
+            $hostlessMatch = $this->routeServer($this->routeCollection->routes['hostless'], $hostlessUrl, $method);
+            if ($hostlessMatch !== null) {
+                return $hostlessMatch;
             }
         }
 
-        // Check hosted dynamic servers second
-        $hostedDynamicServers = $this->routeCollection->routes['hosted']['dynamic'];
-        $hostedDynamicMatch = $this->findDynamicMatch($hostedDynamicServers['regex'], $url);
-        var_dump($hostedDynamicMatch);
-        if ($hostedDynamicMatch !== null) {
-            $hostedDynamicServer = $hostedDynamicServers['servers'][$hostedDynamicMatch];
-            $matchingOperationId = $this->routePath($hostedDynamicMatch, $hostedDynamicServer, $url, $method);
-            if ($matchingOperationId !== null) {
-                return $matchingOperationId;
-            }
-        }
-
-        // Check hostless static servers third
-        $hostedStaticServers = $this->routeCollection->routes['hostless']['static'];
-        uksort($hostedStaticServers, fn($a, $b) => strlen($a) <=> strlen($b));
-
-        foreach ($hostedStaticServers as $hostedStaticServer => $paths) {
-            $matchingOperationId = $this->routePath($hostedStaticServer, $paths, $url, $method);
-            if ($matchingOperationId !== null) {
-                return $matchingOperationId;
-            }
-        }
-
-        // Check hostless dynamic servers fourth
-        $hostedDynamicServers = $this->routeCollection->routes['hostless']['dynamic'];
-        $hostedDynamicMatch = $this->findDynamicMatch($hostedDynamicServers['regex'], $url);
-
-        if ($hostedDynamicMatch !== null) {
-            $hostedDynamicServer = $hostedDynamicServers['servers'][$hostedDynamicMatch];
-            $matchingOperationId = $this->routePath($hostedDynamicMatch, $hostedDynamicServer, $url, $method);
-            if ($matchingOperationId !== null) {
-                return $matchingOperationId;
-            }
-        }
-
-        throw new \Exception('no matching route found');
+        throw CannotRouteRequest::fromErrorCode($this->errorCode);
     }
 
-    private function findDynamicMatch(string $regex, string $string): ?string
+    /**
+     * @param array{
+     *                  'static': array<array{
+     *                  'static': string[][],
+     *                  'dynamic': array{'regex': string, 'paths': string[][]}
+     *              }>,
+     *              'dynamic': array{
+     *                  'regex': string,
+     *                  'servers': array<array{
+     *                      'static': string[][],
+     *                      'dynamic': array{'regex': string, 'paths': string[][]}
+     *                  }>
+     *              }
+     *          } $servers
+     */
+    private function routeServer(array $servers, string $url, string $method): ?string
     {
-        preg_match($regex, $string, $matches);
-        return $matches['MARK'] ?? null;
+        // Check static servers first
+        $staticServers = $servers['static'];
+        // Prioritize server names of greater length
+        uksort($staticServers, fn($a, $b) => strlen($a) <=> strlen($b));
+
+        foreach ($staticServers as $staticServer => $paths) {
+            if (str_starts_with($url, $staticServer)) {
+                $matchingPath = $this->routePath($staticServer, $paths, $url);
+                if ($matchingPath !== null) {
+                    $matchingOperationId = $this->routeOperation($matchingPath, $method);
+                    if ($matchingOperationId !== null) {
+                        return $matchingOperationId;
+                    }
+                }
+            }
+        }
+
+        // Check dynamic servers second
+        $dynamicMatch = $this->findDynamicMatch($servers['dynamic']['regex'], $url);
+        if (isset($dynamicMatch['MARK'])) {
+            $dynamicServer = $servers['dynamic']['servers'][$dynamicMatch['MARK']];
+            $matchingPath = $this->routePath($dynamicMatch[0], $dynamicServer, $url);
+            if ($matchingPath !== null) {
+                $matchingOperationId = $this->routeOperation($matchingPath, $method);
+                if ($matchingOperationId !== null) {
+                    return $matchingOperationId;
+                }
+            }
+        }
+
+        return null;
     }
 
     /** @param array{
      *          'static': array<string,array<string,string>>,
      *          'dynamic': array{'regex': string, 'paths': array<string,array<string,string>>}
-     *     }  $paths
+     *     } $paths
+     * @return string[]
      */
-    private function routePath(string $server, array $paths, string $url, string $method): ?string
+    private function routePath(string $server, array $paths, string $url): ?array
     {
         // Check static paths first
-        if (str_starts_with($url, $server)) {
-            $path = substr_replace($url, '', 0, strlen($server));
+        $path = substr_replace($url, '', 0, strlen($server));
 
-            $matchingPath = $paths['static'][$path][$method] ?? null;
-            if ($matchingPath !== null) {
-                return $matchingPath;
-            }
+        $matchingPath = $paths['static'][$path] ?? null;
+        if ($matchingPath !== null) {
+            return $matchingPath;
+        }
 
-            // Check dynamic paths second
-            $matchingPattern = $this->findDynamicMatch($paths['dynamic']['regex'], $path);
-            if ($matchingPattern !== null && isset($paths['dynamic']['paths'][$matchingPattern][$method])) {
-                return $paths['dynamic']['paths'][$matchingPattern][$method];
-            }
+        // Check dynamic paths second
+        $matchingPattern = $this->findDynamicMatch($paths['dynamic']['regex'], $path);
+        if (isset($matchingPattern['MARK'])) {
+            return $paths['dynamic']['paths'][$matchingPattern['MARK']];
         }
 
         return null;
+    }
+
+    /** @param string[] $path */
+    private function routeOperation(array $path, string $method): ?string
+    {
+        if (isset($path[$method])) {
+            return $path[$method];
+        }
+
+        $this->errorCode = 405;
+        return null;
+    }
+
+    /** @return string[] */
+    private function findDynamicMatch(string $regex, string $string): array
+    {
+        preg_match($regex, $string, $matches);
+        return $matches;
     }
 }

@@ -5,25 +5,30 @@ declare(strict_types=1);
 namespace Membrane\OpenAPIRouter\Router\Collector;
 
 use cebe\openapi\Reader;
+use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
+use Membrane\OpenAPIRouter\Router\ValueObject\Route;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \Membrane\OpenAPIRouter\Router\Collector\RouteCollector
- * @uses   \Membrane\OpenAPIRouter\Router\ValueObject\Route
- * @uses \Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection
- */
+#[CoversClass(RouteCollector::class)]
+#[CoversClass(CannotRouteOpenAPI::class)]
+#[UsesClass(Route::class)]
+#[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
     public const FIXTURES = __DIR__ . '/../../fixtures/';
 
-    /** @test */
+    #[Test]
     public function throwExceptionIfThereAreNoRoutes(): void
     {
         $sut = new RouteCollector();
         $openApi = Reader::readFromJsonFile(self::FIXTURES . 'simple.json');
 
-        self::expectExceptionObject(new \Exception());
+        self::expectExceptionObject(CannotRouteOpenAPI::noRoutes());
 
         $sut->collect($openApi);
     }
@@ -43,7 +48,7 @@ class RouteCollectorTest extends TestCase
                                     ],
                                 ],
                                 'dynamic' => [
-                                    'regex' => '#^(?|/pets/([^/])(*MARK:/pets/{id}))$#',
+                                    'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
                                     'paths' => [
                                         '/pets/{id}' => [
                                             'get' => 'find pet by id',
@@ -80,7 +85,7 @@ class RouteCollectorTest extends TestCase
                                     ],
                                 ],
                                 'dynamic' => [
-                                    'regex' => '#^(?|/and/([^/])(*MARK:/and/{name}))$#',
+                                    'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
                                     'paths' => [
                                         '/and/{name}' => [
                                             'get' => 'get-and',
@@ -95,7 +100,7 @@ class RouteCollectorTest extends TestCase
                                     ],
                                 ],
                                 'dynamic' => [
-                                    'regex' => '#^(?|/and/([^/])(*MARK:/and/{name}))$#',
+                                    'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
                                     'paths' => [
                                         '/and/{name}' => [
                                             'put' => 'put-and',
@@ -132,9 +137,23 @@ class RouteCollectorTest extends TestCase
                                     'paths' => [],
                                 ],
                             ],
+                            'http://wonderful.io/or' => [
+                                'static' => [
+                                    '/or' => [
+                                        'post' => 'post-or',
+                                    ],
+                                    '/xor' => [
+                                        'delete' => 'delete-xor',
+                                    ],
+                                ],
+                                'dynamic' => [
+                                    'regex' => '#^(?|)$#',
+                                    'paths' => [],
+                                ],
+                            ],
                         ],
                         'dynamic' => [
-                            'regex' => '#^(?|http://weird.io/([^/])(*MARK:http://weird.io/{conjunction}))#',
+                            'regex' => '#^(?|http://weird.io/([^/]+)(*MARK:http://weird.io/{conjunction}))#',
                             'servers' => [
                                 'http://weird.io/{conjunction}' => [
                                     'static' => [
@@ -185,8 +204,23 @@ class RouteCollectorTest extends TestCase
                             ],
                         ],
                         'dynamic' => [
-                            'regex' => '#^(?|)#',
-                            'servers' => [],
+                            'regex' => '#^(?|/([^/]+)(*MARK:/{version}))#',
+                            'servers' => [
+                                '/{version}' => [
+                                    'static' => [
+                                        '/or' => [
+                                            'post' => 'post-or',
+                                        ],
+                                        '/xor' => [
+                                            'delete' => 'delete-xor',
+                                        ],
+                                    ],
+                                    'dynamic' => [
+                                        'regex' => '#^(?|)$#',
+                                        'paths' => [],
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ]),
@@ -195,12 +229,8 @@ class RouteCollectorTest extends TestCase
         ];
     }
 
-    /**
-     * Tests it can collect methods => operationIds with an index matching the regex capturing group
-     *
-     * @test
-     * @dataProvider collectTestProvider
-     */
+    #[Test]
+    #[DataProvider('collectTestProvider')]
     public function collectTest(RouteCollection $expected, string $apiFilePath): void
     {
         $openApi = Reader::readFromJsonFile($apiFilePath);

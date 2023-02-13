@@ -8,6 +8,7 @@ use cebe\openapi\spec\OpenApi;
 use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
+use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
 use Membrane\OpenAPIRouter\Router\ValueObject\Route;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 
@@ -18,7 +19,7 @@ class RouteCollector
         $routes = $this->collectRoutes($openApi);
 
         if ($routes === []) {
-            throw new \Exception();
+            throw CannotRouteOpenAPI::noRoutes();
         }
 
         return $this->sortRoutes($this->mergeRoutes(...$routes));
@@ -33,6 +34,7 @@ class RouteCollector
             foreach ($pathObject->getOperations() as $operation => $operationObject) {
                 $operationServers = $this->getServers($operationObject);
 
+                // TODO remove this conditional once OpenAPIFileReader requires operationId
                 if ($operationObject->operationId === null) {
                     throw CannotProcessOpenAPI::missingOperationId($path, $operation);
                 }
@@ -183,6 +185,9 @@ class RouteCollector
 
     private function getRegex(string $path): string
     {
-        return preg_replace('#{[^/]+}#', '([^/])', $path) ?? throw throw new \Exception();
+        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
+        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
+
+        return $regex;
     }
 }

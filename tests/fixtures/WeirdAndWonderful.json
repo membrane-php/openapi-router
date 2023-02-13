@@ -16,10 +16,22 @@
       "url": "/v1"
     },
     {
+      "url": "/{version}",
+      "variables": {
+        "version": {
+          "default": "1",
+          "description": "The version of WeirdAndWindows-ful your device is running"
+        }
+      }
+    },
+    {
       "url": "http://wonderful.io"
     },
     {
       "url": "http://wonderful.io/and"
+    },
+    {
+      "url": "http://wonderful.io/or"
     },
     {
       "url": "http://weird.io/{conjunction}",
