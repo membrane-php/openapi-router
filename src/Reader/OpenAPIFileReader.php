@@ -8,20 +8,22 @@ use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
+use Closure;
 use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
 use Symfony\Component\Yaml\Exception\ParseException;
+use TypeError;
 
 class OpenAPIFileReader
 {
-    /** @var \Closure[] */
+    /** @var Closure[] */
     private readonly array $supportedFileTypes;
 
     public function __construct()
     {
         $this->supportedFileTypes = [
-            'json' => fn($p) => Reader::readFromJsonFile($p),
-            'yaml' => fn($p) => Reader::readFromYamlFile($p),
-            'yml' => fn($p) => Reader::readFromYamlFile($p),
+            'json' => fn($p) => Reader::readFromJsonFile(fileName: $p, resolveReferences: false),
+            'yaml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: false),
+            'yml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: false),
         ];
     }
 
@@ -35,7 +37,7 @@ class OpenAPIFileReader
 
         try {
             $openAPI = $readFrom($absoluteFilePath);
-        } catch (\TypeError | TypeErrorException | ParseException $e) {
+        } catch (TypeError | TypeErrorException | ParseException $e) {
             throw CannotReadOpenAPI::cannotParse(pathinfo($absoluteFilePath, PATHINFO_BASENAME), $e);
         } catch (UnresolvableReferenceException $e) {
             throw CannotReadOpenAPI::unresolvedReference(pathinfo($absoluteFilePath, PATHINFO_BASENAME), $e);

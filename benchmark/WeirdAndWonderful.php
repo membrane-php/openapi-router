@@ -8,6 +8,32 @@ use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
 use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
 use Membrane\OpenAPIRouter\Router\Router;
 
+/**
+ * @param string[] $requests
+ * @param string[] $methods
+ */
+function benchmark(
+    int $iterations,
+    Router $router,
+    array $requests,
+    array $methods = ['get', 'post', 'put', 'delete']
+): void {
+    $maxRequests = count($requests) - 1;
+    $maxMethods = count($methods) - 1;
+
+    $startTime = hrtime(true);
+    for ($i = 0; $i < $iterations; $i++) {
+        try {
+            $router->route($requests[rand(0, $maxRequests)], $methods[rand(0, $maxMethods)]);
+        } catch (Exception) {
+        }
+    }
+    $endTime = hrtime(true);
+
+    $timeTaken = ($endTime - $startTime) / 1e+9;
+    echo sprintf("Time taken for %d requests: %f seconds\n", $iterations, $timeTaken);
+}
+
 $testRequests = [
     'http://weirder.co.uk/and/blink',
     'http://weirder.co.uk/and/harley',
@@ -20,20 +46,9 @@ $testRequests = [
     'http://weird.io/and/or',
     'http://weird.io/therefore/however',
 ];
-$testMethods = ['get', 'post', 'put', 'delete'];
 
-$openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath(__DIR__ . '/../tests/fixtures/stripe.yaml');
-$routeCollection = (new RouteCollector())->collect($openApi);
-$router = new Router($routeCollection);
+$openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath(__DIR__ . '/../tests/fixtures/WeirdAndWonderful.json');
+$router = new Router((new RouteCollector())->collect($openApi));
 
-$startTime = hrtime(true);
-for ($i = 0; $i < 1000000; $i++) {
-    try {
-        $router->route($testRequests[rand(0, 9)], $testMethods[rand(0, 3)]);
-    } catch (Exception) {
-    }
-}
-$endTime = hrtime(true);
-
-$timeTaken = ($endTime - $startTime) / 1e+9;
-echo sprintf("Time Taken for 10000 requests: %f seconds\n", $timeTaken);
+benchmark(10000, $router, $testRequests);
+benchmark(1000000, $router, $testRequests);
