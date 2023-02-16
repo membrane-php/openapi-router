@@ -12,6 +12,7 @@ use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,7 +23,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 )]
 class CacheOpenAPI extends Command
 {
-    protected function configure()
+    protected function configure(): void
     {
         self::addArgument(
             'openAPI',
@@ -32,7 +33,7 @@ class CacheOpenAPI extends Command
         self::addArgument(
             'destination',
             InputArgument::OPTIONAL,
-            'The absolute filepath for the generated route collection',
+            'The filepath for the generated route collection',
             __DIR__ . '/../../../cache/routes.php'
         );
     }
@@ -40,27 +41,30 @@ class CacheOpenAPI extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $openAPIFilePath = $input->getArgument('openAPI');
-        $destination = $input->getArgument('destination');
+        assert(is_string($openAPIFilePath));
+        $existingFilePath = $destination = $input->getArgument('destination');
+        assert(is_string($existingFilePath) && is_string($destination));
 
-        try {
-            assert(is_string($openAPIFilePath));
-            $openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath($openAPIFilePath);
-        } catch (CannotReadOpenAPI $e) {
-            $output->writeln($e->getMessage());
-            return Command::INVALID;
+        while (!file_exists($existingFilePath)) {
+            $existingFilePath = dirname($existingFilePath);
+        }
+        if (!is_writable($existingFilePath)) {
+            $this->outputErrorBlock(sprintf('%s cannot be written to', $existingFilePath), $output);
+            return Command::FAILURE;
         }
 
-        assert(is_string($destination));
-        if (is_writable($destination)) {
-            echo sprintf('%s is an invalid filename', $destination);
-            return Command::INVALID;
+        try {
+            $openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath($openAPIFilePath);
+        } catch (CannotReadOpenAPI $e) {
+            $this->outputErrorBlock($e->getMessage(), $output);
+            return Command::FAILURE;
         }
 
         try {
             $routeCollection = (new RouteCollector())->collect($openApi);
         } catch (CannotRouteOpenAPI | CannotProcessOpenAPI $e) {
-            $output->writeln($e->getMessage());
-            return Command::INVALID;
+            $this->outputErrorBlock($e->getMessage(), $output);
+            return Command::FAILURE;
         }
 
         $routes = sprintf(
@@ -68,8 +72,17 @@ class CacheOpenAPI extends Command
             RouteCollection::class,
             var_export($routeCollection->routes, true)
         );
+
+
+        mkdir(dirname($destination), recursive: true);
         file_put_contents($destination, $routes);
 
         return Command::SUCCESS;
+    }
+
+    private function outputErrorBlock(string $message, OutputInterface $output): void
+    {
+        $formattedMessage = (new FormatterHelper())->formatBlock($message, 'error', true);
+        $output->writeLn(sprintf("\n%s\n", $formattedMessage));
     }
 }

@@ -21,9 +21,9 @@ class OpenAPIFileReader
     public function __construct()
     {
         $this->supportedFileTypes = [
-            'json' => fn($p) => Reader::readFromJsonFile(fileName: $p, resolveReferences: false),
-            'yaml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: false),
-            'yml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: false),
+            'json' => fn($p) => Reader::readFromJsonFile(fileName: $p),
+            'yaml' => fn($p) => Reader::readFromYamlFile(fileName: $p),
+            'yml' => fn($p) => Reader::readFromYamlFile(fileName: $p),
         ];
     }
 
