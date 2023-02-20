@@ -39,6 +39,16 @@ class OpenAPIFileReaderTest extends TestCase
     }
 
     #[Test]
+    public function throwsExceptionForRelativeFilePaths(): void
+    {
+        self::expectExceptionObject(
+            CannotReadOpenAPI::unresolvedReference('petstore.yaml', new UnresolvableReferenceException())
+        );
+
+        (new OpenAPIFileReader())->readFromAbsoluteFilePath('./tests/fixtures/docs/petstore.yaml');
+    }
+
+    #[Test]
     public function readerThrowsExceptionForUnsupportedFileTypes(): void
     {
         $structure = ['openapi.txt' => 'some text'];
@@ -46,6 +56,23 @@ class OpenAPIFileReaderTest extends TestCase
         $filePath = $this->vfsRoot->url() . '/openapi.txt';
 
         self::expectExceptionObject(CannotReadOpenAPI::fileTypeNotSupported(pathinfo($filePath, PATHINFO_EXTENSION)));
+
+        (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
+    }
+
+    #[Test]
+    public function readerThrowsExceptionIfYamlCannotBeParsedAsOpenAPI(): void
+    {
+        $structure = [
+            'openapi.yaml' =>
+                <<<YAML
+                openapi: "
+                YAML
+        ];
+        vfsStream::create($structure);
+        $filePath = $this->vfsRoot->url() . '/openapi.yaml';
+
+        self::expectExceptionObject(CannotReadOpenAPI::cannotParse('openapi.yaml', new ParseException('')));
 
         (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
     }
@@ -64,23 +91,6 @@ class OpenAPIFileReaderTest extends TestCase
         $filePath = $this->vfsRoot->url() . '/openapi.json';
 
         self::expectExceptionObject(CannotReadOpenAPI::cannotParse('openapi.json', new TypeError()));
-
-        (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
-    }
-
-    #[Test]
-    public function readerThrowsExceptionIfYamlCannotBeParsedAsOpenAPI(): void
-    {
-        $structure = [
-            'openapi.yaml' =>
-                <<<YAML
-                openapi: "
-                YAML
-        ];
-        vfsStream::create($structure);
-        $filePath = $this->vfsRoot->url() . '/openapi.yaml';
-
-        self::expectExceptionObject(CannotReadOpenAPI::cannotParse('openapi.yaml', new ParseException('')));
 
         (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
     }
@@ -128,16 +138,28 @@ class OpenAPIFileReaderTest extends TestCase
         (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
     }
 
+
     #[Test]
-    public function throwsExceptionForRelativeFilePaths(): void
+    public function returnsOpenAPIObjectFromYamlWithValidOpenAPI(): void
     {
-        self::expectExceptionObject(
-            CannotReadOpenAPI::unresolvedReference('petstore.yaml', new UnresolvableReferenceException())
-        );
+        $structure = [
+            'openapi.yaml' =>
+                <<<YAML
+                openapi: 3.0.0
+                info:
+                  title: "Test API"
+                  version: "1.0.0"
+                paths:
+                  /somepath:
+                YAML
+        ];
+        vfsStream::create(structure: $structure);
+        $filePath = $this->vfsRoot->url() . '/openapi.yaml';
 
-        (new OpenAPIFileReader())->readFromAbsoluteFilePath('./tests/fixtures/docs/petstore.yaml');
+        $actual = (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
+
+        self::assertInstanceOf(OpenApi::class, $actual);
     }
-
 
     #[Test]
     public function returnsOpenAPIObjectFromJsonWithValidOpenAPI(): void
@@ -158,28 +180,6 @@ class OpenAPIFileReaderTest extends TestCase
         ];
         vfsStream::create($structure);
         $filePath = $this->vfsRoot->url() . '/openapi.json';
-
-        $actual = (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
-
-        self::assertInstanceOf(OpenApi::class, $actual);
-    }
-
-    #[Test]
-    public function returnsOpenAPIObjectFromYamlWithValidOpenAPI(): void
-    {
-        $structure = [
-            'openapi.yaml' =>
-                <<<YAML
-                openapi: 3.0.0
-                info:
-                  title: "Test API"
-                  version: "1.0.0"
-                paths:
-                  /somepath:
-                YAML
-        ];
-        vfsStream::create(structure: $structure);
-        $filePath = $this->vfsRoot->url() . '/openapi.yaml';
 
         $actual = (new OpenAPIFileReader())->readFromAbsoluteFilePath($filePath);
 

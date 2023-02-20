@@ -7,6 +7,7 @@ namespace Membrane\OpenAPIRouter\Reader;
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
 use cebe\openapi\Reader;
+use cebe\openapi\ReferenceContext;
 use cebe\openapi\spec\OpenApi;
 use Closure;
 use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
@@ -18,12 +19,12 @@ class OpenAPIFileReader
     /** @var Closure[] */
     private readonly array $supportedFileTypes;
 
-    public function __construct()
+    public function __construct(string|false $resolveMode = ReferenceContext::RESOLVE_MODE_INLINE)
     {
         $this->supportedFileTypes = [
-            'json' => fn($p) => Reader::readFromJsonFile(fileName: $p),
-            'yaml' => fn($p) => Reader::readFromYamlFile(fileName: $p),
-            'yml' => fn($p) => Reader::readFromYamlFile(fileName: $p),
+            'json' => fn($p) => Reader::readFromJsonFile(fileName: $p, resolveReferences: $resolveMode),
+            'yaml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: $resolveMode),
+            'yml' => fn($p) => Reader::readFromYamlFile(fileName: $p, resolveReferences: $resolveMode),
         ];
     }
 
