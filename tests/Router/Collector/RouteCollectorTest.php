@@ -33,7 +33,7 @@ class RouteCollectorTest extends TestCase
         $sut->collect($openApi);
     }
 
-    public function collectTestProvider(): array
+    public static function collectTestProvider(): array
     {
         return [
             'petstore-expanded.json' => [

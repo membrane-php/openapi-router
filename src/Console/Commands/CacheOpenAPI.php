@@ -74,7 +74,9 @@ class CacheOpenAPI extends Command
         );
 
 
-        mkdir(dirname($destination), recursive: true);
+        if (!file_exists(dirname($destination))) {
+            mkdir(dirname($destination), recursive: true);
+        }
         file_put_contents($destination, $routes);
 
         return Command::SUCCESS;
