@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(CannotRouteRequest::class)]
 class RouterTest extends TestCase
 {
-    private function getPetStoreRouteCollection(): RouteCollection
+    private static function getPetStoreRouteCollection(): RouteCollection
     {
         return new RouteCollection([
             'hosted' => [
@@ -53,7 +53,7 @@ class RouterTest extends TestCase
         ]);
     }
 
-    private function getWeirdAndWonderfulRouteCollection(): RouteCollection
+    private static function getWeirdAndWonderfulRouteCollection(): RouteCollection
     {
         return new RouteCollection([
             'hosted' => [
@@ -207,32 +207,32 @@ class RouterTest extends TestCase
         ]);
     }
 
-    public function unsuccessfulRouteProvider(): array
+    public static function unsuccessfulRouteProvider(): array
     {
         return [
             'petstore-expanded: incorrect server url' => [
                 CannotRouteRequest::notFound(),
                 'https://hatshop.dapper.net/api/pets',
                 'get',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
             'petstore-expanded: correct static server url but incorrect path' => [
                 CannotRouteRequest::notFound(),
                 'http://petstore.swagger.io/api/hats',
                 'get',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
             'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
                 CannotRouteRequest::notFound(),
                 'http://weird.io/however/but',
                 'get',
-                $this->getWeirdAndWonderfulRouteCollection(),
+                self::getWeirdAndWonderfulRouteCollection(),
             ],
             'petstore-expanded: correct url but incorrect method' => [
                 CannotRouteRequest::methodNotAllowed(),
                 'http://petstore.swagger.io/api/pets',
                 'delete',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
         ];
     }
@@ -252,50 +252,50 @@ class RouterTest extends TestCase
         $sut->route($path, $method);
     }
 
-    public function successfulRouteProvider(): array
+    public static function successfulRouteProvider(): array
     {
         return [
             'petstore: /pets path, get method' => [
                 'findPets',
                 'http://petstore.swagger.io/api/pets',
                 'get',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
             'petstore: /pets/{id} path, get method' => [
                 'find pet by id',
                 'http://petstore.swagger.io/api/pets/1',
                 'get',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
             'petstore: /pets/{id} path, delete method' => [
                 'deletePet',
                 'http://petstore.swagger.io/api/pets/1',
                 'delete',
-                $this->getPetStoreRouteCollection(),
+                self::getPetStoreRouteCollection(),
             ],
             'WeirdAndWonderful: /v1/or path, post method' => [
                 'post-or',
                 '/v1/or',
                 'post',
-                $this->getWeirdAndWonderfulRouteCollection(),
+                self::getWeirdAndWonderfulRouteCollection(),
             ],
             'WeirdAndWonderful: http://www.arbitrary.com/v1/or path, post method' => [
                 'post-or',
                 '/v1/or',
                 'post',
-                $this->getWeirdAndWonderfulRouteCollection(),
+                self::getWeirdAndWonderfulRouteCollection(),
             ],
             'WeirdAndWonderful: http://weird.io/however/or path, post method' => [
                 'post-or',
                 'http://weird.io/however/or',
                 'post',
-                $this->getWeirdAndWonderfulRouteCollection(),
+                self::getWeirdAndWonderfulRouteCollection(),
             ],
             'WeirdAndWonderful: /{version}/xor path, delete method' => [
                 'delete-xor',
                 '/12/xor',
                 'delete',
-                $this->getWeirdAndWonderfulRouteCollection(),
+                self::getWeirdAndWonderfulRouteCollection(),
             ],
         ];
     }
