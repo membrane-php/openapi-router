@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 include_once __DIR__ . '/../vendor/autoload.php';
 
-use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
+use cebe\openapi\Reader;
 use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
 use Membrane\OpenAPIRouter\Router\Router;
 
@@ -46,8 +46,9 @@ $testRequests = [
     'http://weird.io/and/or',
     'http://weird.io/therefore/however',
 ];
-
-$openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath(__DIR__ . '/../tests/fixtures/WeirdAndWonderful.json');
+$fileName = __DIR__ . '/../tests/fixtures/stripe.yaml';
+$openApi = Reader::readFromYamlFile(fileName: $fileName, resolveReferences: true);
+echo 'read openApi file';
 $router = new Router((new RouteCollector())->collect($openApi));
 
 benchmark(10000, $router, $testRequests);

@@ -21,7 +21,7 @@ use Symfony\Component\Console\Output\OutputInterface;
     name: 'membrane:router:generate-routes',
     description: 'Parses OpenAPI file to write a cached set of routes to the given file',
 )]
-class CacheOpenAPI extends Command
+class CacheOpenAPIRoutes extends Command
 {
     protected function configure(): void
     {
