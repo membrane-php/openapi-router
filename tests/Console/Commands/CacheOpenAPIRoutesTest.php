@@ -20,14 +20,14 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-#[CoversClass(CacheOpenAPI::class)]
+#[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(CannotReadOpenAPI::class)]
 #[CoversClass(CannotRouteOpenAPI::class)]
 #[UsesClass(OpenAPIFileReader::class)]
 #[UsesClass(Route::class)]
 #[UsesClass(RouteCollection::class)]
 #[UsesClass(RouteCollector::class)]
-class CacheOpenAPITest extends TestCase
+class CacheOpenAPIRoutesTest extends TestCase
 {
     private vfsStreamDirectory $root;
 
@@ -42,7 +42,7 @@ class CacheOpenAPITest extends TestCase
         $correctApiPath = __DIR__ . '/../../fixtures/docs/petstore-expanded.json';
         chmod(vfsStream::url('cache'), 0444);
         $readonlyDestination = vfsStream::url('cache');
-        $sut = new CommandTester(new CacheOpenAPI());
+        $sut = new CommandTester(new CacheOpenAPIRoutes());
 
         $sut->execute(['openAPI' => $correctApiPath, 'destination' => $readonlyDestination]);
 
@@ -74,7 +74,7 @@ class CacheOpenAPITest extends TestCase
     #[DataProvider('failedExecutionProvider')]
     public function executeTest(string $openAPI, string $destination, int $expectedStatusCode): void
     {
-        $sut = new CommandTester(new CacheOpenAPI());
+        $sut = new CommandTester(new CacheOpenAPIRoutes());
 
         $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
 
@@ -297,7 +297,7 @@ class CacheOpenAPITest extends TestCase
         int $expectedStatusCode,
         RouteCollection $expectedRouteCollection
     ): void {
-        $sut = new CommandTester(new CacheOpenAPI());
+        $sut = new CommandTester(new CacheOpenAPIRoutes());
 
         $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
 
