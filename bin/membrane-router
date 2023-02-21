@@ -3,11 +3,11 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Membrane\OpenAPIRouter\Console\Commands\CacheOpenAPI;
+use Membrane\OpenAPIRouter\Console\Commands\CacheOpenAPIRoutes;
 use Symfony\Component\Console\Application;
 
 $application = new Application();
 
-$application->add(new CacheOpenAPI());
+$application->add(new CacheOpenAPIRoutes());
 
 $application->run();
