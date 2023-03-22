@@ -34,7 +34,7 @@ class CacheOpenAPI extends Command
             'destination',
             InputArgument::OPTIONAL,
             'The filepath for the generated route collection',
-            __DIR__ . '/../../../cache/routes.php'
+            getcwd() . '/cache/routes.php'
         );
     }
 
