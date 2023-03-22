@@ -54,7 +54,7 @@ class CacheOpenAPITest extends TestCase
         );
     }
 
-    public function failedExecutionProvider(): array
+    public static function failedExecutionProvider(): array
     {
         return [
             'cannot read from relative filename' => [
@@ -81,9 +81,9 @@ class CacheOpenAPITest extends TestCase
         self::assertSame($expectedStatusCode, $sut->getStatusCode());
     }
 
-    public function successfulExecutionProvider(): array
+    public static function successfulExecutionProvider(): array
     {
-        $petStoreRoutes =                 new RouteCollection([
+        $petStoreRoutes = new RouteCollection([
             'hosted' => [
                 'static' => [
                     'http://petstore.swagger.io/api' => [
@@ -270,19 +270,19 @@ class CacheOpenAPITest extends TestCase
         return [
             'successfully routes petstore-expanded.json' => [
                 __DIR__ . '/../../fixtures/docs/petstore-expanded.json',
-                vfsStream::url('cache') . '/routes.php',
+                vfsStream::url('cache/routes.php'),
                 Command::SUCCESS,
                 $petStoreRoutes
             ],
             'successfully routes the WeirdAndWonderful.json' => [
                 __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
-                vfsStream::url('cache') . '/routes.php',
+                vfsStream::url('cache/routes.php'),
                 Command::SUCCESS,
                 $weirdAndWonderfulRoutes
             ],
             'successfully routes the WeirdAndWonderful.json and caches in a nested directory' => [
                 __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
-                vfsStream::url('cache') . '/nested-cache/nester-cache/nestest-cache/routes.php',
+                vfsStream::url('cache/nested-cache/nester-cache/nestest-cache/routes.php'),
                 Command::SUCCESS,
                 $weirdAndWonderfulRoutes
             ]
