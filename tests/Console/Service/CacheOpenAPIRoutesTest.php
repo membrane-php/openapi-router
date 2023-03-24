@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Console\Commands;
+namespace Console\Service;
 
+use Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes;
 use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
 use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
 use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
@@ -17,42 +18,37 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Tester\CommandTester;
 
 #[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(CannotReadOpenAPI::class)]
 #[CoversClass(CannotRouteOpenAPI::class)]
-#[UsesClass(\Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes::class)]
 #[UsesClass(OpenAPIFileReader::class)]
+#[UsesClass(RouteCollector::class)]
 #[UsesClass(Route::class)]
 #[UsesClass(RouteCollection::class)]
-#[UsesClass(RouteCollector::class)]
 class CacheOpenAPIRoutesTest extends TestCase
 {
     private vfsStreamDirectory $root;
+    private CacheOpenAPIRoutes $sut;
 
     public function setUp(): void
     {
         $this->root = vfsStream::setup('cache');
+        $this->sut = new CacheOpenAPIRoutes(self::createStub(LoggerInterface::class));
     }
 
     #[Test]
     public function outputsErrorForReadonlyFilePaths(): void
     {
-        $correctApiPath = __DIR__ . '/../../fixtures/docs/petstore-expanded.json';
-        chmod(vfsStream::url('cache'), 0444);
-        $readonlyDestination = vfsStream::url('cache');
-        $sut = new CommandTester(new CacheOpenAPIRoutes());
+        $readonlyDestination = $this->root->url('cache');
+        chmod($readonlyDestination, 0444);
 
-        $sut->execute(['openAPI' => $correctApiPath, 'destination' => $readonlyDestination]);
-
-        self::assertSame(Command::FAILURE, $sut->getStatusCode());
-
-        self::assertSame(
-            sprintf('[error] %s cannot be written to', vfsStream::url('cache')),
-            trim($sut->getDisplay(true))
-        );
+        self::assertFalse($this->sut->cache(
+            __DIR__ . '/../../fixtures/docs/petstore-expanded.json',
+            $readonlyDestination
+        ));
     }
 
     public static function failedExecutionProvider(): array
@@ -73,13 +69,9 @@ class CacheOpenAPIRoutesTest extends TestCase
 
     #[Test]
     #[DataProvider('failedExecutionProvider')]
-    public function executeTest(string $openAPI, string $destination, int $expectedStatusCode): void
+    public function executeTest(string $openAPI, string $destination): void
     {
-        $sut = new CommandTester(new CacheOpenAPIRoutes());
-
-        $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
-
-        self::assertSame($expectedStatusCode, $sut->getStatusCode());
+        self::assertFalse($this->sut->cache($openAPI, $destination));
     }
 
     public static function successfulExecutionProvider(): array
@@ -272,19 +264,16 @@ class CacheOpenAPIRoutesTest extends TestCase
             'successfully routes petstore-expanded.json' => [
                 __DIR__ . '/../../fixtures/docs/petstore-expanded.json',
                 vfsStream::url('cache/routes.php'),
-                Command::SUCCESS,
                 $petStoreRoutes
             ],
             'successfully routes the WeirdAndWonderful.json' => [
                 __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
                 vfsStream::url('cache/routes.php'),
-                Command::SUCCESS,
                 $weirdAndWonderfulRoutes
             ],
             'successfully routes the WeirdAndWonderful.json and caches in a nested directory' => [
                 __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
                 vfsStream::url('cache/nested-cache/nester-cache/nestest-cache/routes.php'),
-                Command::SUCCESS,
                 $weirdAndWonderfulRoutes
             ]
         ];
@@ -295,14 +284,9 @@ class CacheOpenAPIRoutesTest extends TestCase
     public function successfulExecutionTest(
         string $openAPI,
         string $destination,
-        int $expectedStatusCode,
         RouteCollection $expectedRouteCollection
     ): void {
-        $sut = new CommandTester(new CacheOpenAPIRoutes());
-
-        $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
-
-        self::assertSame($expectedStatusCode, $sut->getStatusCode());
+        self::assertTrue($this->sut->cache($openAPI, $destination));
 
         $actualRouteCollection = eval('?>' . file_get_contents($destination));
 
