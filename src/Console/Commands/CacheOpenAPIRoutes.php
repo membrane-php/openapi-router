@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Console\Commands;
 
+use Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes as CacheOpenAPIRoutesService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -40,7 +41,7 @@ class CacheOpenAPIRoutes extends Command
         assert(is_string($destination));
 
         $logger = new ConsoleLogger($output);
-        $service = new \Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes($logger);
+        $service = new CacheOpenAPIRoutesService($logger);
 
         return $service->cache($openAPIFilePath, $destination) ? Command::SUCCESS : Command::FAILURE;
     }

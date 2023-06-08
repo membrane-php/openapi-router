@@ -29,6 +29,7 @@ class RouteCollector
     private function collectRoutes(OpenApi $openApi): array
     {
         $rootServers = $this->getServers($openApi);
+        $operationIds = [];
         foreach ($openApi->paths as $path => $pathObject) {
             $pathServers = $this->getServers($pathObject);
             foreach ($pathObject->getOperations() as $operation => $operationObject) {
@@ -37,6 +38,14 @@ class RouteCollector
                 // TODO remove this conditional once OpenAPIFileReader requires operationId
                 if ($operationObject->operationId === null) {
                     throw CannotProcessOpenAPI::missingOperationId($path, $operation);
+                }
+
+                if (isset($operationIds[$operationObject->operationId])) {
+                    throw CannotProcessOpenAPI::duplicateOperationId(
+                        $operationObject->operationId,
+                        $operationIds[$operationObject->operationId],
+                        ['path' => $path, 'operation' => $operation]
+                    );
                 }
 
                 if ($operationServers !== []) {
@@ -53,6 +62,11 @@ class RouteCollector
                     $operation,
                     $operationObject->operationId
                 );
+
+                $operationIds[$operationObject->operationId] = [
+                    'path' => $path,
+                    'operation' => $operation
+                ];
             }
         }
         return $collection ?? [];

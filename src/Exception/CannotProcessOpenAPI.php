@@ -20,6 +20,7 @@ class CannotProcessOpenAPI extends RuntimeException
     public const PATH_MISMATCH = 2;
     public const TYPE_MISMATCH = 3;
     public const MISSING_OPERATION_ID = 4;
+    public const DUPLICATE_OPERATION_ID = 5;
 
 
     public static function invalidPath(string $path): self
@@ -54,5 +55,26 @@ class CannotProcessOpenAPI extends RuntimeException
             $path
         );
         return new self($message, self::MISSING_OPERATION_ID);
+    }
+
+    /**
+     * @param array{operation: string, path: string} $operationIdUse1
+     * @param array{operation: string, path: string} $operationIdUse2
+     */
+    public static function duplicateOperationId(
+        string $operationId,
+        array $operationIdUse1,
+        array $operationIdUse2
+    ): self {
+        $message = sprintf(
+            'Duplicate operation id: %s. Used by %s %s and %s %s',
+            $operationId,
+            $operationIdUse1['operation'],
+            $operationIdUse1['path'],
+            $operationIdUse2['operation'],
+            $operationIdUse2['path']
+        );
+
+        return new self($message, self::DUPLICATE_OPERATION_ID);
     }
 }
