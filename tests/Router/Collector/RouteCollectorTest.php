@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Membrane\OpenAPIRouter\Router\Collector;
 
 use cebe\openapi\Reader;
+use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
 use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
 use Membrane\OpenAPIRouter\Router\ValueObject\Route;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
@@ -29,6 +30,32 @@ class RouteCollectorTest extends TestCase
         $openApi = Reader::readFromJsonFile(self::FIXTURES . 'simple.json');
 
         self::expectExceptionObject(CannotRouteOpenAPI::noRoutes());
+
+        $sut->collect($openApi);
+    }
+
+    #[Test]
+    public function throwsExceptionForMissingOperationId(): void
+    {
+        $sut = new RouteCollector();
+        $openApi = Reader::readFromYamlFile(self::FIXTURES . 'missingOperationId.yaml');
+
+        self::expectExceptionObject(CannotProcessOpenAPI::missingOperationId('/path', 'get'));
+
+        $sut->collect($openApi);
+    }
+
+    #[Test]
+    public function throwsExceptionForDuplicateOperationId(): void
+    {
+        $sut = new RouteCollector();
+        $openApi = Reader::readFromYamlFile(self::FIXTURES . 'duplicateOperationId.yaml');
+
+        self::expectExceptionObject(CannotProcessOpenAPI::duplicateOperationId(
+            'operation1',
+            ['path' => '/path', 'operation' => 'get'],
+            ['path' => '/path', 'operation' => 'delete'],
+        ));
 
         $sut->collect($openApi);
     }
