@@ -1,6 +1,7 @@
 {
   "name": "membrane/openapi-router",
   "type": "library",
+  "license": "MPL-2.0",
   "autoload": {
     "psr-4": {
       "Membrane\\OpenAPIRouter\\": "src/",
