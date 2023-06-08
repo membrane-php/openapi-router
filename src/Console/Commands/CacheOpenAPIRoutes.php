@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Console\Commands;
 
-use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\FormatterHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
@@ -42,49 +36,12 @@ class CacheOpenAPIRoutes extends Command
     {
         $openAPIFilePath = $input->getArgument('openAPI');
         assert(is_string($openAPIFilePath));
-        $existingFilePath = $destination = $input->getArgument('destination');
-        assert(is_string($existingFilePath) && is_string($destination));
+        $destination = $input->getArgument('destination');
+        assert(is_string($destination));
 
-        while (!file_exists($existingFilePath)) {
-            $existingFilePath = dirname($existingFilePath);
-        }
-        if (!is_writable($existingFilePath)) {
-            $this->outputErrorBlock(sprintf('%s cannot be written to', $existingFilePath), $output);
-            return Command::FAILURE;
-        }
+        $logger = new ConsoleLogger($output);
+        $service = new \Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes($logger);
 
-        try {
-            $openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath($openAPIFilePath);
-        } catch (CannotReadOpenAPI $e) {
-            $this->outputErrorBlock($e->getMessage(), $output);
-            return Command::FAILURE;
-        }
-
-        try {
-            $routeCollection = (new RouteCollector())->collect($openApi);
-        } catch (CannotRouteOpenAPI | CannotProcessOpenAPI $e) {
-            $this->outputErrorBlock($e->getMessage(), $output);
-            return Command::FAILURE;
-        }
-
-        $routes = sprintf(
-            '<?php return new %s(%s);',
-            RouteCollection::class,
-            var_export($routeCollection->routes, true)
-        );
-
-
-        if (!file_exists(dirname($destination))) {
-            mkdir(dirname($destination), recursive: true);
-        }
-        file_put_contents($destination, $routes);
-
-        return Command::SUCCESS;
-    }
-
-    private function outputErrorBlock(string $message, OutputInterface $output): void
-    {
-        $formattedMessage = (new FormatterHelper())->formatBlock($message, 'error', true);
-        $output->writeLn(sprintf("\n%s\n", $formattedMessage));
+        return $service->cache($openAPIFilePath, $destination) ? Command::SUCCESS : Command::FAILURE;
     }
 }
