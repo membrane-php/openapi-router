@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Router\ValueObject;
 
+use Membrane\OpenAPIRouter\Router\ValueObject\Route\Server;
+
 class RouteCollection
 {
     /**
@@ -39,5 +41,56 @@ class RouteCollection
     public function __construct(
         public readonly array $routes
     ) {
+    }
+
+    public static function fromServers(Server ...$servers): self
+    {
+        $filteredServers = array_filter($servers, fn($s) => !$s->isEmpty());
+        
+        $hostedServers = $hostlessServers = [];
+        foreach ($servers as $server) {
+            if ($server->isHosted()) {
+                $hostedServers[$server->url] = $server;
+            } else {
+                $hostlessServers[$server->url] = $server;
+            }
+        }
+
+        $hostedStaticServers = $hostedDynamicServers = $hostedGroupRegex = [];
+        foreach ($hostedServers as $server) {
+            if ($server->isDynamic()) {
+                $hostedDynamicServers[$server->url] = $server->jsonSerialize();
+                $hostedGroupRegex[] = sprintf('%s(*MARK:%s)', $server->regex, $server->url);
+            } else {
+                $hostedStaticServers[$server->url] = $server->jsonSerialize();
+            }
+        }
+
+        $hostlessStaticServers = $hostlessDynamicServers = $hostlessGroupRegex = [];
+        foreach ($hostlessServers as $server) {
+            if ($server->isDynamic()) {
+                $hostlessDynamicServers[$server->url] = $server->jsonSerialize();
+                $hostlessGroupRegex[] = sprintf('%s(*MARK:%s)', $server->regex, $server->url);
+            } else {
+                $hostlessStaticServers[$server->url] = $server->jsonSerialize();
+            }
+        }
+
+        return new self([
+            'hosted' => [
+                'static' => $hostedStaticServers,
+                'dynamic' => [
+                    'regex' => sprintf('#^(?|%s)#', implode('|', $hostedGroupRegex)),
+                    'servers' => $hostedDynamicServers,
+                ],
+            ],
+            'hostless' => [
+                'static' => $hostlessStaticServers,
+                'dynamic' => [
+                    'regex' => sprintf('#^(?|%s)#', implode('|', $hostlessGroupRegex)),
+                    'servers' => $hostlessDynamicServers,
+                ],
+            ],
+        ]);
     }
 }

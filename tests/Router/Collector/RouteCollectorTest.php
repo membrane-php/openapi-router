@@ -7,7 +7,7 @@ namespace Membrane\OpenAPIRouter\Router\Collector;
 use cebe\openapi\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
 use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Router\ValueObject\Route;
+use Membrane\OpenAPIRouter\Router\ValueObject\Route\Route;
 use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
