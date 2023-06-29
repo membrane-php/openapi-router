@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Membrane\OpenAPIRouter\Router;
 
 use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 
 class Router
 {

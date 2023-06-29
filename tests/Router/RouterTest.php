@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Membrane\OpenAPIRouter\Router;
 
 use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

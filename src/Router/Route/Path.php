@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router\ValueObject\Route;
+namespace Membrane\OpenAPIRouter\Router\Route;
 
 use JsonSerializable;
 

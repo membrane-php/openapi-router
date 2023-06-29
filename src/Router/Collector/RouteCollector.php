@@ -9,9 +9,9 @@ use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
 use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Router\ValueObject\Route\Route;
-use Membrane\OpenAPIRouter\Router\ValueObject\Route\Server as ServerRoute;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
+use Membrane\OpenAPIRouter\Router\Route\Route;
+use Membrane\OpenAPIRouter\Router\Route\Server as ServerRoute;
+use Membrane\OpenAPIRouter\Router\RouteCollection;
 
 class RouteCollector
 {

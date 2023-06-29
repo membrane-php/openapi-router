@@ -4,8 +4,8 @@ namespace Router;
 
 use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
 use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
+use Membrane\OpenAPIRouter\Router\RouteCollection;
 use Membrane\OpenAPIRouter\Router\Router;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Test;
