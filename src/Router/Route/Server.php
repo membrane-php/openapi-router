@@ -46,7 +46,12 @@ final class Server implements JsonSerializable
         return parse_url($this->url, PHP_URL_HOST) !== null;
     }
 
-    public function jsonSerialize(): mixed
+    /** @return array{
+     *          'static': array<string, array<string,string>>,
+     *          'dynamic': array{'regex': string, 'paths': array<string, array<string,string>>}
+     *          }
+     */
+    public function jsonSerialize(): array
     {
         $filteredPaths = array_filter($this->paths, fn($p) => !$p->isEmpty());
         usort($filteredPaths, fn($p) => $p->howManyDynamicComponents());

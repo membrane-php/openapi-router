@@ -37,6 +37,7 @@ final class Path implements JsonSerializable
         return count($this->operations) === 0;
     }
 
+    /** @return array<string, string> */
     public function jsonSerialize(): array
     {
         return [...$this->operations];
