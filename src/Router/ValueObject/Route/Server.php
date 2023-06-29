@@ -31,6 +31,11 @@ final class Server implements JsonSerializable
         return $this->url !== $this->regex;
     }
 
+    public function howManyDynamicComponents(): int
+    {
+        return substr_count($this->regex, '([^/]+)');
+    }
+
     public function isEmpty(): bool
     {
         return count(array_filter($this->paths, fn($p) => !$p->isEmpty())) === 0;
@@ -44,6 +49,7 @@ final class Server implements JsonSerializable
     public function jsonSerialize(): mixed
     {
         $filteredPaths = array_filter($this->paths, fn($p) => !$p->isEmpty());
+        usort($filteredPaths, fn($p) => $p->howManyDynamicComponents());
 
         $staticPaths = $dynamicPaths = $regex = [];
         foreach ($filteredPaths as $path) {

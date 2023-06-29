@@ -39,9 +39,10 @@ class APIeceOfCakeTest extends TestCase
 
         // I expect to have the following hostless dynamic routes
         $hostlessDynamicRoutes = [
-            '/{cakeType}/{icing}' => ['get' => 'findDessertByIcing', 'post' => 'addDessertByIcing'],
+            '/{cakeType}/sponge' => ['get' => 'findSpongeByDesserts'],
             '/cakes/{icing}' => ['get' => 'findCakesByIcing', 'post' => 'addCakesByIcing'],
-            '/{cakeType}/sponge' => ['get' => 'findSpongeByDesserts']
+            '/{cakeType}/{icing}' => ['get' => 'findDessertByIcing', 'post' => 'addDessertByIcing'],
+
         ];
         self::assertSame(
             $hostlessDynamicRoutes,

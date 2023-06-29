@@ -46,9 +46,10 @@ class RouteCollection
     public static function fromServers(Server ...$servers): self
     {
         $filteredServers = array_filter($servers, fn($s) => !$s->isEmpty());
-        
+        usort($filteredServers, fn($s) => $s->howManyDynamicComponents());
+
         $hostedServers = $hostlessServers = [];
-        foreach ($servers as $server) {
+        foreach ($filteredServers as $server) {
             if ($server->isHosted()) {
                 $hostedServers[$server->url] = $server;
             } else {

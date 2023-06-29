@@ -27,6 +27,11 @@ final class Path implements JsonSerializable
         return $this->url !== $this->regex;
     }
 
+    public function howManyDynamicComponents(): int
+    {
+        return substr_count($this->regex, '([^/]+)');
+    }
+
     public function isEmpty(): bool
     {
         return count($this->operations) === 0;
