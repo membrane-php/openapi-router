@@ -1,0 +1,114 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "APIece of Cake",
+        "description": "An API for paths to take to make a cake to bake",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/{cakeType}/{icing}": {
+            "parameters": [
+                {
+                    "name": "cakeType",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "icing",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "findDessertByIcing",
+                "responses": {
+                    "200": {
+                        "description": "Successful Dessert Response"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "addDessertByIcing",
+                "responses": {
+                    "200": {
+                        "description": "Successful Dessert Response"
+                    }
+                }
+            }
+        },
+        "/cakes/sponge": {
+            "get": {
+                "operationId": "findSpongeCakes",
+                "responses": {
+                    "200": {
+                        "description": "Successful Cake Response"
+                    }
+                }
+            }
+        },
+        "/cakes/{icing}": {
+            "parameters": [
+                {
+                    "name": "icing",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "findCakesByIcing",
+                "responses": {
+                    "200": {
+                        "description": "Successful Cake Response"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "addCakesByIcing",
+                "parameters": [
+                    {
+                        "name": "icing",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Cake Response"
+                    }
+                }
+            }
+        },
+        "/{cakeType}/sponge": {
+            "parameters": [
+                {
+                    "name": "cakeType",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ],
+            "get": {
+                "operationId": "findSpongeByDesserts",
+                "responses": {
+                    "200": {
+                        "description": "Successful Sponge Response"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -9,42 +9,73 @@ use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
 use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Router\ValueObject\Route;
-use Membrane\OpenAPIRouter\Router\ValueObject\RouteCollection;
+use Membrane\OpenAPIRouter\Router\Route\Route;
+use Membrane\OpenAPIRouter\Router\Route\Server as ServerRoute;
+use Membrane\OpenAPIRouter\Router\RouteCollection;
 
 class RouteCollector
 {
     public function collect(OpenApi $openApi): RouteCollection
     {
-        $routes = $this->collectRoutes($openApi);
+        $collection = $this->collectRoutes($openApi);
 
-        if ($routes === []) {
+        if ($collection === []) {
             throw CannotRouteOpenAPI::noRoutes();
         }
 
-        return $this->sortRoutes($this->mergeRoutes(...$routes));
+        return RouteCollection::fromServers(...$collection);
     }
 
-    /** @return Route[] */
+    /** @return array<string, string> */
+    private function getServers(OpenApi|PathItem|Operation $object): array
+    {
+        $uniqueServers = array_unique(array_map(fn($p) => rtrim($p->url, '/'), $object->servers));
+        return array_combine($uniqueServers, array_map(fn($p) => $this->getRegex($p), $uniqueServers));
+    }
+
+    private function getRegex(string $path): string
+    {
+        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
+        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
+
+        return $regex;
+    }
+
+    /** @return array<string, ServerRoute> */
     private function collectRoutes(OpenApi $openApi): array
     {
+        $collection = [];
+
         $rootServers = $this->getServers($openApi);
+        foreach ($rootServers as $url => $regex) {
+            $collection[$url] ??= new ServerRoute($url, $regex);
+        }
+
         $operationIds = [];
         foreach ($openApi->paths as $path => $pathObject) {
+            $pathRegex = $this->getRegex($path);
+
             $pathServers = $this->getServers($pathObject);
-            foreach ($pathObject->getOperations() as $operation => $operationObject) {
+            foreach ($pathServers as $url => $regex) {
+                $collection[$url] ??= new ServerRoute($url, $regex);
+            }
+
+            foreach ($pathObject->getOperations() as $method => $operationObject) {
                 $operationServers = $this->getServers($operationObject);
+                foreach ($operationServers as $url => $regex) {
+                    $collection[$url] ??= new ServerRoute($url, $regex);
+                }
 
                 // TODO remove this conditional once OpenAPIFileReader requires operationId
                 if ($operationObject->operationId === null) {
-                    throw CannotProcessOpenAPI::missingOperationId($path, $operation);
+                    throw CannotProcessOpenAPI::missingOperationId($path, $method);
                 }
 
                 if (isset($operationIds[$operationObject->operationId])) {
                     throw CannotProcessOpenAPI::duplicateOperationId(
                         $operationObject->operationId,
                         $operationIds[$operationObject->operationId],
-                        ['path' => $path, 'operation' => $operation]
+                        ['path' => $path, 'operation' => $method]
                     );
                 }
 
@@ -56,152 +87,14 @@ class RouteCollector
                     $servers = $rootServers;
                 }
 
-                $collection[] = new Route(
-                    $servers,
-                    $path,
-                    $operation,
-                    $operationObject->operationId
-                );
+                foreach ($servers as $url => $regex) {
+                    $collection[$url]->addRoute(new Route($path, $pathRegex, $method, $operationObject->operationId));
+                }
 
-                $operationIds[$operationObject->operationId] = [
-                    'path' => $path,
-                    'operation' => $operation
-                ];
-            }
-        }
-        return $collection ?? [];
-    }
-
-    /** @return string[] */
-    private function getServers(OpenApi|PathItem|Operation $object): array
-    {
-        return array_unique(array_map(fn($p) => rtrim($p->url, '/'), $object->servers));
-    }
-
-    /** @return string[][][] */
-    private function mergeRoutes(Route ...$routes): array
-    {
-        foreach ($routes as $route) {
-            foreach ($route->servers as $server) {
-                $routesArray[$server][$route->path][$route->method] = $route->operationId;
+                $operationIds[$operationObject->operationId] = ['path' => $path, 'operation' => $method];
             }
         }
 
-        return $routesArray ?? [];
-    }
-
-    /** @param string[][][] $routes */
-    private function sortRoutes(array $routes): RouteCollection
-    {
-        $routesWithSortedPaths = [];
-
-        foreach ($routes as $server => $paths) {
-            $routesWithSortedPaths[$server] = $this->sortPaths($paths);
-        }
-
-        $routesWithSortedServers = $this->sortServers($routesWithSortedPaths);
-
-        return $routesWithSortedServers;
-    }
-
-    /**
-     * @param string[][] $paths
-     * @return  array{
-     *              'static': string[][],
-     *              'dynamic': array{
-     *                  'regex': string,
-     *                  'paths': string[][]
-     *              }
-     *          }
-     */
-    private function sortPaths(array $paths): array
-    {
-        $staticPaths = $dynamicPaths = $groupRegex = [];
-
-        foreach ($paths as $path => $operations) {
-            $pathRegex = $this->getRegex($path);
-            if ($path === $pathRegex) {
-                $staticPaths[$path] = $operations;
-            } else {
-                $dynamicPaths[$path] = $operations;
-                $groupRegex[] = sprintf('%s(*MARK:%s)', $pathRegex, $path);
-            }
-        }
-
-        return [
-            'static' => $staticPaths,
-            'dynamic' => [
-                'regex' => sprintf('#^(?|%s)$#', implode('|', $groupRegex)),
-                'paths' => $dynamicPaths,
-            ],
-        ];
-    }
-
-    /**
-     * @param array<array{
-     *              'static': string[][],
-     *              'dynamic': array{
-     *                  'regex': string,
-     *                  'paths': string[][]
-     *              }
-     *          }> $servers
-     */
-    private function sortServers(array $servers): RouteCollection
-    {
-        $hostedServers = $hostlessServers = [];
-        foreach ($servers as $server => $paths) {
-            if (parse_url($server, PHP_URL_HOST) === null) {
-                $hostlessServers[$server] = $paths;
-            } else {
-                $hostedServers[$server] = $paths;
-            }
-        }
-
-        $hostedStaticServers = $hostedDynamicServers = $hostedGroupRegex = [];
-        foreach ($hostedServers as $server => $paths) {
-            $serverRegex = $this->getRegex($server);
-            if ($server === $serverRegex) {
-                $hostedStaticServers[$server] = $paths;
-            } else {
-                $hostedDynamicServers[$server] = $paths;
-                $hostedGroupRegex[] = sprintf('%s(*MARK:%s)', $serverRegex, $server);
-            }
-        }
-
-        $hostlessStaticServers = $hostlessDynamicServers = $hostlessGroupRegex = [];
-        foreach ($hostlessServers as $server => $paths) {
-            $serverRegex = $this->getRegex($server);
-            if ($server === $serverRegex) {
-                $hostlessStaticServers[$server] = $paths;
-            } else {
-                $hostlessDynamicServers[$server] = $paths;
-                $hostlessGroupRegex[] = sprintf('%s(*MARK:%s)', $serverRegex, $server);
-            }
-        }
-
-        return new RouteCollection([
-            'hosted' => [
-                'static' => $hostedStaticServers,
-                'dynamic' => [
-                    'regex' => sprintf('#^(?|%s)#', implode('|', $hostedGroupRegex)),
-                    'servers' => $hostedDynamicServers,
-                ],
-            ],
-            'hostless' => [
-                'static' => $hostlessStaticServers,
-                'dynamic' => [
-                    'regex' => sprintf('#^(?|%s)#', implode('|', $hostlessGroupRegex)),
-                    'servers' => $hostlessDynamicServers,
-                ],
-            ],
-        ]);
-    }
-
-    private function getRegex(string $path): string
-    {
-        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
-        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
-
-        return $regex;
+        return array_filter($collection, fn($s) => !$s->isEmpty());
     }
 }
