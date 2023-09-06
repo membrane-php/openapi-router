@@ -6,9 +6,11 @@ namespace Membrane\OpenAPIRouter\Tests\Console\Service;
 
 use Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
+use Membrane\OpenAPIRouter\Route\Path;
+use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router\Route;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -20,7 +22,7 @@ use Psr\Log\LoggerInterface;
 #[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(CannotCollectRoutes::class)]
 #[UsesClass(RouteCollector::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
 #[UsesClass(RouteCollection::class)]
 class CacheOpenAPIRoutesTest extends TestCase
 {

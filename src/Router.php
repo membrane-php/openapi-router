@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router;
+namespace Membrane\OpenAPIRouter;
 
 use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
 

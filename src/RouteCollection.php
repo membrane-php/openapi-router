@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router;
+namespace Membrane\OpenAPIRouter;
 
-use Membrane\OpenAPIRouter\Router\Route\Server;
+use Membrane\OpenAPIRouter\Route\Server;
 
 class RouteCollection
 {

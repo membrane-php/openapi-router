@@ -36,9 +36,7 @@ To read routes dynamically, you can do the following:
 ```php
 <?php
 
-use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Router;
+use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;use Membrane\OpenAPIRouter\RouteCollector;use Membrane\OpenAPIRouter\Router;
 
 $openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath('/app/petstore.yaml');
 $routeCollection = (new RouteCollector())->collect($openApi);
@@ -57,11 +55,10 @@ Run the following console command to cache the routes from your OpenAPI, to avoi
 membrane:router:generate-routes <openapi-filepath> <destination-filepath>
 ```
 
-
 ```php
 <?php
 
-use Membrane\OpenAPIRouter\Router\Router;
+use Membrane\OpenAPIRouter\Router;
 
 $routeCollection = include '/app/cache/routes.php';
 

@@ -1,13 +1,15 @@
 <?php
 
-namespace Membrane\OpenAPIRouter\Tests\Router;
+namespace Membrane\OpenAPIRouter\Tests;
 
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
+use Membrane\OpenAPIRouter\Route\Path;
+use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
+use Membrane\OpenAPIRouter\Router;
 use Membrane\OpenAPIRouter\Router\Route;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
-use Membrane\OpenAPIRouter\Router\Router;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Router::class)]
 #[CoversClass(RouteCollector::class)]
 #[UsesClass(RouteCollection::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
 class APIeceOfCakeTest extends TestCase
 {
     #[Test, TestDox('It reads and collects all s')]

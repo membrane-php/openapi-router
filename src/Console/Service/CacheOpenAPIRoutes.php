@@ -10,8 +10,8 @@ use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
 use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
 use Psr\Log\LoggerInterface;
 
 class CacheOpenAPIRoutes

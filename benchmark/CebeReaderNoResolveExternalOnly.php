@@ -6,8 +6,8 @@ include_once __DIR__ . '/../vendor/autoload.php';
 
 use cebe\openapi\Reader;
 use cebe\openapi\ReferenceContext;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Router;
+use Membrane\OpenAPIRouter\RouteCollector;
+use Membrane\OpenAPIRouter\Router;
 
 /**
  * @param string[] $requests

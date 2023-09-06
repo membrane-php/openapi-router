@@ -5,8 +5,8 @@ declare(strict_types=1);
 include_once __DIR__ . '/../vendor/autoload.php';
 
 use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Router;
+use Membrane\OpenAPIRouter\RouteCollector;
+use Membrane\OpenAPIRouter\Router;
 
 /**
  * @param string[] $requests

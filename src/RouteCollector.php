@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router\Collector;
+namespace Membrane\OpenAPIRouter;
 
 use cebe\openapi\spec\OpenApi;
 use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Router\Route\Route;
-use Membrane\OpenAPIRouter\Router\Route\Server as ServerRoute;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
+use Membrane\OpenAPIRouter\Route\Route;
+use Membrane\OpenAPIRouter\Route\Server as ServerRoute;
 
 class RouteCollector
 {

@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Tests\Router\Collector;
+namespace Membrane\OpenAPIRouter\Tests;
 
 use Membrane\OpenAPIReader\FileFormat;
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
+use Membrane\OpenAPIRouter\Route\Path;
+use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router\Route;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -19,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RouteCollector::class)]
 #[CoversClass(CannotCollectRoutes::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
 #[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
