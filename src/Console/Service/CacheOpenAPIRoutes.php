@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Console\Service;
 
+use Membrane\OpenAPIReader\Exception\CannotRead;
+use Membrane\OpenAPIReader\OpenAPIVersion;
+use Membrane\OpenAPIReader\Reader;
+use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
 use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
 use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
 use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
 use Membrane\OpenAPIRouter\Router\RouteCollection;
@@ -31,15 +33,16 @@ class CacheOpenAPIRoutes
         }
 
         try {
-            $openApi = (new OpenAPIFileReader())->readFromAbsoluteFilePath($openAPIFilePath);
-        } catch (CannotReadOpenAPI $e) {
+            $openApi = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+                ->readFromAbsoluteFilePath($openAPIFilePath);
+        } catch (CannotRead $e) {
             $this->logger->error($e->getMessage());
             return false;
         }
 
         try {
             $routeCollection = (new RouteCollector())->collect($openApi);
-        } catch (CannotRouteOpenAPI | CannotProcessOpenAPI $e) {
+        } catch (CannotCollectRoutes | CannotProcessOpenAPI $e) {
             $this->logger->error($e->getMessage());
             return false;
         }

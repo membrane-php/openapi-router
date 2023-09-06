@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router\Collector;
+namespace Membrane\OpenAPIRouter\Tests\Router\Collector;
 
-use cebe\openapi\Reader;
-use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Router\Route\Route;
+use Membrane\OpenAPIReader\FileFormat;
+use Membrane\OpenAPIReader\OpenAPIVersion;
+use Membrane\OpenAPIReader\Reader;
+use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
+use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
+use Membrane\OpenAPIRouter\Router\Route;
 use Membrane\OpenAPIRouter\Router\RouteCollection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -16,8 +18,8 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RouteCollector::class)]
-#[CoversClass(CannotRouteOpenAPI::class)]
-#[UsesClass(Route::class)]
+#[CoversClass(CannotCollectRoutes::class)]
+#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
@@ -26,38 +28,19 @@ class RouteCollectorTest extends TestCase
     #[Test]
     public function throwExceptionIfThereAreNoRoutes(): void
     {
-        $sut = new RouteCollector();
-        $openApi = Reader::readFromJsonFile(self::FIXTURES . 'simple.json');
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+            ->readFromString(
+                json_encode([
+                    'openapi' => '3.0.0',
+                    'info' => ['title' => '', 'version' => '1.0.0'],
+                    'paths' => []
+                ]),
+                FileFormat::Json
+            );
 
-        self::expectExceptionObject(CannotRouteOpenAPI::noRoutes());
+        self::expectExceptionObject(CannotCollectRoutes::noRoutes());
 
-        $sut->collect($openApi);
-    }
-
-    #[Test]
-    public function throwsExceptionForMissingOperationId(): void
-    {
-        $sut = new RouteCollector();
-        $openApi = Reader::readFromYamlFile(self::FIXTURES . 'missingOperationId.yaml');
-
-        self::expectExceptionObject(CannotProcessOpenAPI::missingOperationId('/path', 'get'));
-
-        $sut->collect($openApi);
-    }
-
-    #[Test]
-    public function throwsExceptionForDuplicateOperationId(): void
-    {
-        $sut = new RouteCollector();
-        $openApi = Reader::readFromYamlFile(self::FIXTURES . 'duplicateOperationId.yaml');
-
-        self::expectExceptionObject(CannotProcessOpenAPI::duplicateOperationId(
-            'operation1',
-            ['path' => '/path', 'operation' => 'get'],
-            ['path' => '/path', 'operation' => 'delete'],
-        ));
-
-        $sut->collect($openApi);
+        (new RouteCollector())->collect($openAPI);
     }
 
     public static function collectTestProvider(): array
@@ -260,11 +243,9 @@ class RouteCollectorTest extends TestCase
     #[DataProvider('collectTestProvider')]
     public function collectTest(RouteCollection $expected, string $apiFilePath): void
     {
-        $openApi = Reader::readFromJsonFile($apiFilePath);
-        $sut = new RouteCollector();
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+            ->readFromAbsoluteFilePath($apiFilePath);
 
-        $actual = $sut->collect($openApi);
-
-        self::assertEquals($expected, $actual);
+        self::assertEquals($expected, (new RouteCollector())->collect($openAPI));
     }
 }

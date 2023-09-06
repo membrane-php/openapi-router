@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router;
+namespace Membrane\OpenAPIRouter\Tests\Router;
 
 use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
+use Membrane\OpenAPIRouter\Router\RouteCollection;
+use Membrane\OpenAPIRouter\Router\Router;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
