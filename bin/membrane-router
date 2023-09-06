@@ -3,7 +3,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Membrane\OpenAPIRouter\Console\Commands\CacheOpenAPIRoutes;
+use Membrane\OpenAPIRouter\Console\Command\CacheOpenAPIRoutes;
 use Symfony\Component\Console\Application;
 
 $application = new Application();

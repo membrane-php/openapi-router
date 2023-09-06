@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Tests\Console\Commands;
+namespace Membrane\OpenAPIRouter\Tests\Console\Command;
 
-use Membrane\OpenAPIRouter\Console\Commands\CacheOpenAPIRoutes;
+use Membrane\OpenAPIRouter\Console\Command\CacheOpenAPIRoutes;
 use Membrane\OpenAPIRouter\Console\Service;
 use Membrane\OpenAPIRouter\Exception;
 use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
