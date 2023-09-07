@@ -4,12 +4,10 @@ namespace Membrane\OpenAPIRouter\Tests;
 
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
-use Membrane\OpenAPIRouter\Route\Path;
-use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router;
-use Membrane\OpenAPIRouter\Router\Route;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Test;
@@ -20,14 +18,14 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Router::class)]
 #[CoversClass(RouteCollector::class)]
 #[UsesClass(RouteCollection::class)]
-#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
+#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 class APIeceOfCakeTest extends TestCase
 {
-    #[Test, TestDox('It reads and collects all s')]
+    #[Test, TestDox('It reads and collects all routes')]
     public function itCollectsPathsFromAPIeceOfCake(): RouteCollection
     {
         // Given the APIeceOfCake OpenAPI
-        $apiFilePath = __DIR__ . '/../fixtures/APIeceOfCake.json';
+        $apiFilePath = __DIR__ . '/fixtures/APIeceOfCake.json';
 
         // When I read and collect the routes from APIeceOfCake
         $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))

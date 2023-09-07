@@ -8,11 +8,9 @@ use Membrane\OpenAPIReader\FileFormat;
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Route\Path;
-use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Route;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,11 +19,11 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RouteCollector::class)]
 #[CoversClass(CannotCollectRoutes::class)]
-#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
+#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
-    public const FIXTURES = __DIR__ . '/../../fixtures/';
+    public const FIXTURES = __DIR__ . '/fixtures/';
 
     #[Test]
     public function throwExceptionIfThereAreNoRoutes(): void

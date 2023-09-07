@@ -7,11 +7,9 @@ namespace Membrane\OpenAPIRouter\Tests\Console\Command;
 use Membrane\OpenAPIRouter\Console\Command\CacheOpenAPIRoutes;
 use Membrane\OpenAPIRouter\Console\Service;
 use Membrane\OpenAPIRouter\Exception;
-use Membrane\OpenAPIRouter\Route\Path;
-use Membrane\OpenAPIRouter\Route\Server;
+use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Route;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -24,7 +22,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 #[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(Exception\CannotCollectRoutes::class)]
 #[UsesClass(Service\CacheOpenAPIRoutes::class)]
-#[UsesClass(\Membrane\OpenAPIRouter\Route\Route::class), UsesClass(Server::class), UsesClass(Path::class)]
+#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 #[UsesClass(RouteCollector::class)]
 class CacheOpenAPIRoutesTest extends TestCase
