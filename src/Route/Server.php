@@ -54,7 +54,10 @@ final class Server implements JsonSerializable
     public function jsonSerialize(): array
     {
         $filteredPaths = array_filter($this->paths, fn($p) => !$p->isEmpty());
-        usort($filteredPaths, fn($a, $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents());
+        usort(
+            $filteredPaths,
+            fn(Path $a, Path $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents()
+        );
 
         $staticPaths = $dynamicPaths = $regex = [];
         foreach ($filteredPaths as $path) {
