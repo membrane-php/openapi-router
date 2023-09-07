@@ -8,8 +8,6 @@ use Membrane\OpenAPIReader\Exception\CannotRead;
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
-use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
 use Psr\Log\LoggerInterface;
@@ -42,7 +40,7 @@ class CacheOpenAPIRoutes
 
         try {
             $routeCollection = (new RouteCollector())->collect($openApi);
-        } catch (CannotCollectRoutes | CannotProcessOpenAPI $e) {
+        } catch (CannotCollectRoutes $e) {
             $this->logger->error($e->getMessage());
             return false;
         }

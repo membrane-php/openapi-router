@@ -4,208 +4,47 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Tests;
 
+use Generator;
+use Membrane\OpenAPIReader\OpenAPIVersion;
+use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
 use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Router::class)]
 #[CoversClass(CannotRouteRequest::class)]
 class RouterTest extends TestCase
 {
+    private const FIXTURES = __DIR__ . '/fixtures/';
+
     private static function getPetStoreRouteCollection(): RouteCollection
     {
-        return new RouteCollection([
-            'hosted' => [
-                'static' => [
-                    'http://petstore.swagger.io/api' => [
-                        'static' => [
-                            '/pets' => [
-                                'get' => 'findPets',
-                                'post' => 'addPet',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
-                            'paths' => [
-                                '/pets/{id}' => [
-                                    'get' => 'find pet by id',
-                                    'delete' => 'deletePet',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|)#',
-                    'servers' => [],
-                ],
-            ],
-            'hostless' => [
-                'static' => [],
-                'dynamic' => [
-                    'regex' => '#^(?|)#',
-                    'servers' => [],
-                ],
-            ],
-        ]);
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+                ->readFromAbsoluteFilePath(self::FIXTURES . 'docs/petstore-expanded.json');
+
+        return (new RouteCollector())->collect($openAPI);
     }
 
     private static function getWeirdAndWonderfulRouteCollection(): RouteCollection
     {
-        return new RouteCollection([
-            'hosted' => [
-                'static' => [
-                    'http://weirdest.com' => [
-                        'static' => [
-                            '/however' => [
-                                'put' => 'put-however',
-                                'post' => 'post-however',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
-                            'paths' => [
-                                '/and/{name}' => [
-                                    'get' => 'get-and',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'http://weirder.co.uk' => [
-                        'static' => [
-                            '/however' => [
-                                'get' => 'get-however',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
-                            'paths' => [
-                                '/and/{name}' => [
-                                    'put' => 'put-and',
-                                    'post' => 'post-and',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'http://wonderful.io' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    'http://wonderful.io/and' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    'http://wonderful.io/or' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|http://weird.io/([^/]+)(*MARK:http://weird.io/{conjunction}))#',
-                    'servers' => [
-                        'http://weird.io/{conjunction}' => [
-                            'static' => [
-                                '/or' => [
-                                    'post' => 'post-or',
-                                ],
-                                '/xor' => [
-                                    'delete' => 'delete-xor',
-                                ],
-                            ],
-                            'dynamic' => [
-                                'regex' => '#^(?|)$#',
-                                'paths' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            'hostless' => [
-                'static' => [
-                    '' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    '/v1' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|/([^/]+)(*MARK:/{version}))#',
-                    'servers' => [
-                        '/{version}' => [
-                            'static' => [
-                                '/or' => [
-                                    'post' => 'post-or',
-                                ],
-                                '/xor' => [
-                                    'delete' => 'delete-xor',
-                                ],
-                            ],
-                            'dynamic' => [
-                                'regex' => '#^(?|)$#',
-                                'paths' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ]);
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+            ->readFromAbsoluteFilePath(self::FIXTURES . 'WeirdAndWonderful.json');
+
+        return (new RouteCollector())->collect($openAPI);
+    }
+
+    private static function getAPieceOfCakeRouteCollection(): RouteCollection
+    {
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+            ->readFromAbsoluteFilePath(self::FIXTURES . 'APIeceOfCake.json');
+
+        return (new RouteCollector())->collect($openAPI);
     }
 
     public static function unsuccessfulRouteProvider(): array
@@ -314,5 +153,36 @@ class RouterTest extends TestCase
         $actual = $sut->route($path, $method);
 
         self::assertSame($expected, $actual);
+    }
+
+    public static function provideRoutingPriorities(): Generator
+    {
+        yield 'completely static path prioritise over anything dynamic' => [
+            'findSpongeCakes',
+            '/cakes/sponge',
+            'get',
+            self::getAPieceOfCakeRouteCollection()
+        ];
+        yield 'partially dynamic path to prioritise over anything with more dynamic parts' => [
+            'findCakesByIcing',
+            '/cakes/chocolate',
+            'get',
+            self::getAPieceOfCakeRouteCollection()
+        ];
+    }
+
+    #[Test, TestDox('When routing the priority will be paths with less dynamic components first')]
+    #[DataProvider('provideRoutingPriorities')]
+    public function itWillPrioritiseRoutesWithMoreStaticComponentsFirst(
+        string $expectedOperationId,
+        string $url,
+        string $method,
+        RouteCollection $routeCollection
+    ): void {
+        $sut = new Router($routeCollection);
+
+        $actualOperationId = $sut->route($url, $method);
+
+        self::assertSame($expectedOperationId, $actualOperationId);
     }
 }
