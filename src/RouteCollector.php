@@ -14,18 +14,6 @@ class RouteCollector
 {
     public function collect(OpenApi $openApi): RouteCollection
     {
-        $collection = $this->collectRoutes($openApi);
-
-        if ($collection === []) {
-            throw CannotCollectRoutes::noRoutes();
-        }
-
-        return RouteCollection::fromServers(...$collection);
-    }
-
-    /** @return array<string, Server> */
-    private function collectRoutes(OpenApi $openApi): array
-    {
         $collection = [];
 
         foreach ($openApi->paths as $path => $pathObject) {
@@ -40,7 +28,11 @@ class RouteCollector
             }
         }
 
-        return array_filter($collection, fn($s) => !$s->isEmpty());
+        if ($collection === []) {
+            throw CannotCollectRoutes::noRoutes();
+        }
+
+        return RouteCollection::fromServers(...$collection);
     }
 
     /** @return array<string, string> */
@@ -54,6 +46,6 @@ class RouteCollector
             $servers = $openAPI->servers;
         }
 
-        return array_unique(array_map(fn($p) => rtrim($p->url, '/'), $servers));
+        return array_map(fn($p) => rtrim($p->url, '/'), $servers);
     }
 }

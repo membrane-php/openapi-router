@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter\Tests\Route;
 
+use Generator;
 use Membrane\OpenAPIRouter\Route\Path;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -18,7 +19,7 @@ class PathTest extends TestCase
         return [
             'static path' => ['/static/path', '/static/path'],
             'partially dynamic path' => ['/([^/]+)/path', '/{dynamic}/path'],
-            'dynamic path' => ['/([^/]+)/([^/]+)', '/{dynamic}/{path}}']
+            'dynamic path' => ['/([^/]+)/([^/]+)', '/{dynamic}/{path}']
         ];
     }
 
@@ -34,7 +35,7 @@ class PathTest extends TestCase
         return [
             'static path' => [false, '/static/path'],
             'partially dynamic path' => [true, '/{dynamic}/path'],
-            'dynamic path' => [true, '/{dynamic}/{path}}']
+            'dynamic path' => [true, '/{dynamic}/{path}']
         ];
     }
 
@@ -42,9 +43,7 @@ class PathTest extends TestCase
     #[DataProvider('provideUrlsToCheckIfDynamic')]
     public function itCanTellIfItIsDynamic(bool $expected, string $url): void
     {
-        $sut = new Path($url);
-
-        self::assertSame($expected, $sut->isDynamic());
+        self::assertSame($expected, (new Path($url))->isDynamic());
     }
 
     public static function provideUrlsToCountDynamicComponents(): array
@@ -52,7 +51,7 @@ class PathTest extends TestCase
         return [
             'static path' => [0, '/static/path'],
             'partially dynamic path' => [1, '/{dynamic}/path'],
-            'dynamic path' => [2, '/{dynamic}/{path}}']
+            'dynamic path' => [2, '/{dynamic}/{path}']
         ];
     }
 
@@ -60,9 +59,7 @@ class PathTest extends TestCase
     #[DataProvider('provideUrlsToCountDynamicComponents')]
     public function itCanCountDynamicComponents(int $expected, string $url): void
     {
-        $sut = new Path($url);
-
-        self::assertSame($expected, $sut->howManyDynamicComponents());
+        self::assertSame($expected, (new Path($url))->howManyDynamicComponents());
     }
 
     #[Test]
@@ -75,5 +72,52 @@ class PathTest extends TestCase
         $sut->addRoute('get', 'get-operation-id');
 
         self::assertFalse($sut->isEmpty());
+    }
+
+    public static function providePathsToJsonSerialize(): Generator
+    {
+        $expected = [
+            'delete' => 'delete-operation',
+            'get' => 'get-operation',
+            'post' => 'post-operation'
+        ];
+
+        $operations = [
+          ['get', 'get-operation'],
+          ['post', 'post-operation'],
+          ['delete', 'delete-operation'],
+        ];
+
+        yield [
+            $expected,
+            (function() use ($operations) {
+                $sut = new Path('/path');
+                foreach ($operations as $operation) {
+                    $sut->addRoute(...$operation);
+                }
+                return $sut;
+            })(),
+        ];
+        yield [
+            $expected,
+            (function() use ($operations) {
+                $sut = new Path('/path');
+                foreach (array_reverse($operations) as $operation) {
+                    $sut->addRoute(...$operation);
+                }
+                return $sut;
+            })(),
+        ];
+    }
+
+    #[Test]
+    public function itIsJsonSerializable(): void
+    {
+        $sut = new Path('/path');
+
+        $sut->addRoute('get', 'get-operation-id');
+        $sut->addRoute('post', 'post-operation-id');
+
+        self::assertSame(['get' => 'get-operation-id', 'post' => 'post-operation-id'], $sut->jsonSerialize());
     }
 }

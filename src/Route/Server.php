@@ -42,7 +42,7 @@ final class Server implements JsonSerializable
 
     public function isEmpty(): bool
     {
-        return count(array_filter($this->paths, fn($p) => !$p->isEmpty())) === 0;
+        return count($this->paths) === 0;
     }
 
     public function isHosted(): bool
@@ -57,14 +57,14 @@ final class Server implements JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        $filteredPaths = array_filter($this->paths, fn($p) => !$p->isEmpty());
+        $paths = $this->paths;
         usort(
-            $filteredPaths,
+            $paths,
             fn(Path $a, Path $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents()
         );
 
         $staticPaths = $dynamicPaths = $regex = [];
-        foreach ($filteredPaths as $path) {
+        foreach ($paths as $path) {
             if ($path->isDynamic()) {
                 $dynamicPaths[$path->url] = $path->jsonSerialize();
                 $regex[] = sprintf('%s(*MARK:%s)', $path->regex, $path->url);

@@ -43,6 +43,8 @@ final class Path implements JsonSerializable
     /** @return array<string, string> */
     public function jsonSerialize(): array
     {
-        return [...$this->operations];
+        $operations = $this->operations;
+        ksort($operations);
+        return $operations;
     }
 }
