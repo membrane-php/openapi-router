@@ -8,18 +8,21 @@ use JsonSerializable;
 
 final class Path implements JsonSerializable
 {
+    public readonly string $regex;
     /** @var array<string, string> */
     private array $operations = [];
 
     public function __construct(
-        public readonly string $url,
-        public readonly string $regex,
+        public readonly string $url
     ) {
+        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $this->url);
+        assert(is_string($regex));
+        $this->regex = $regex;
     }
 
-    public function addRoute(Route $route): void
+    public function addRoute(string $method, string $operationId): void
     {
-        $this->operations[$route->method] = $route->operationId;
+        $this->operations[$method] = $operationId;
     }
 
     public function isDynamic(): bool

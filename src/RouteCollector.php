@@ -8,8 +8,7 @@ use cebe\openapi\spec\OpenApi;
 use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
-use Membrane\OpenAPIRouter\Route\Route;
-use Membrane\OpenAPIRouter\Route\Server as ServerRoute;
+use Membrane\OpenAPIRouter\Route\Server;
 
 class RouteCollector
 {
@@ -24,44 +23,20 @@ class RouteCollector
         return RouteCollection::fromServers(...$collection);
     }
 
-    /** @return array<string, ServerRoute> */
+    /** @return array<string, Server> */
     private function collectRoutes(OpenApi $openApi): array
     {
         $collection = [];
 
-        $rootServers = $this->getServers($openApi);
-        foreach ($rootServers as $url => $regex) {
-            $collection[$url] ??= new ServerRoute($url, $regex);
-        }
-
-        $operationIds = [];
         foreach ($openApi->paths as $path => $pathObject) {
-            $pathRegex = $this->getRegex($path);
-
-            $pathServers = $this->getServers($pathObject);
-            foreach ($pathServers as $url => $regex) {
-                $collection[$url] ??= new ServerRoute($url, $regex);
-            }
-
             foreach ($pathObject->getOperations() as $method => $operationObject) {
-                $operationServers = $this->getServers($operationObject);
-                foreach ($operationServers as $url => $regex) {
-                    $collection[$url] ??= new ServerRoute($url, $regex);
+                $servers = $this->getServers($openApi, $pathObject, $operationObject);
+                foreach ($servers as $serverUrl) {
+                    if (!isset($collection[$serverUrl])) {
+                        $collection[$serverUrl] = new Server($serverUrl);
+                    }
+                    $collection[$serverUrl]->addRoute($path, $method, $operationObject->operationId);
                 }
-
-                if ($operationServers !== []) {
-                    $servers = $operationServers;
-                } elseif ($pathServers !== []) {
-                    $servers = $pathServers;
-                } else {
-                    $servers = $rootServers;
-                }
-
-                foreach ($servers as $url => $regex) {
-                    $collection[$url]->addRoute(new Route($path, $pathRegex, $method, $operationObject->operationId));
-                }
-
-                $operationIds[$operationObject->operationId] = ['path' => $path, 'operation' => $method];
             }
         }
 
@@ -69,17 +44,16 @@ class RouteCollector
     }
 
     /** @return array<string, string> */
-    private function getServers(OpenApi|PathItem|Operation $object): array
+    private function getServers(OpenApi $openAPI, PathItem $path, Operation $operation): array
     {
-        $uniqueServers = array_unique(array_map(fn($p) => rtrim($p->url, '/'), $object->servers));
-        return array_combine($uniqueServers, array_map(fn($p) => $this->getRegex($p), $uniqueServers));
-    }
+        if ($operation->servers !== []) {
+            $servers = $operation->servers;
+        } elseif ($path->servers !== []) {
+            $servers = $path->servers;
+        } else {
+            $servers = $openAPI->servers;
+        }
 
-    private function getRegex(string $path): string
-    {
-        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
-        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
-
-        return $regex;
+        return array_unique(array_map(fn($p) => rtrim($p->url, '/'), $servers));
     }
 }

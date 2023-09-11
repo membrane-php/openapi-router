@@ -22,7 +22,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 #[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(Exception\CannotCollectRoutes::class)]
 #[UsesClass(Service\CacheOpenAPIRoutes::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 #[UsesClass(RouteCollector::class)]
 class CacheOpenAPIRoutesTest extends TestCase

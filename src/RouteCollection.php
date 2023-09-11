@@ -6,7 +6,7 @@ namespace Membrane\OpenAPIRouter;
 
 use Membrane\OpenAPIRouter\Route\Server;
 
-class RouteCollection
+final class RouteCollection
 {
     /**
      * @param  array{
@@ -45,14 +45,14 @@ class RouteCollection
 
     public static function fromServers(Server ...$servers): self
     {
-        $filteredServers = array_filter($servers, fn($s) => !$s->isEmpty());
+        usort($servers, fn(Server $a, Server $b) => strlen($b->regex) <=> strlen($a->regex));
         usort(
-            $filteredServers,
+            $servers,
             fn(Server $a, Server $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents()
         );
 
         $hostedServers = $hostlessServers = [];
-        foreach ($filteredServers as $server) {
+        foreach ($servers as $server) {
             if ($server->isHosted()) {
                 $hostedServers[$server->url] = $server;
             } else {

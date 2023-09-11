@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RouteCollector::class)]
 #[CoversClass(CannotCollectRoutes::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
