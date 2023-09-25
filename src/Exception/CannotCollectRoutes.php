@@ -6,7 +6,9 @@ namespace Membrane\OpenAPIRouter\Exception;
 
 /* This exception occurs when a route collection cannot be created from your OpenAPI */
 
-class CannotRouteOpenAPI extends \RuntimeException
+use RuntimeException;
+
+class CannotCollectRoutes extends RuntimeException
 {
     public const NO_ROUTES = 0;
 

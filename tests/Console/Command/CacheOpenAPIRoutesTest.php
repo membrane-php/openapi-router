@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Console\Commands;
+namespace Membrane\OpenAPIRouter\Tests\Console\Command;
 
-use Membrane\OpenAPIRouter\Exception\CannotReadOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Reader\OpenAPIFileReader;
-use Membrane\OpenAPIRouter\Router\Collector\RouteCollector;
-use Membrane\OpenAPIRouter\Router\Route\Route;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
+use Membrane\OpenAPIRouter\Console\Command\CacheOpenAPIRoutes;
+use Membrane\OpenAPIRouter\Console\Service;
+use Membrane\OpenAPIRouter\Exception;
+use Membrane\OpenAPIRouter\Route;
+use Membrane\OpenAPIRouter\RouteCollection;
+use Membrane\OpenAPIRouter\RouteCollector;
 use org\bovigo\vfs\vfsStream;
-use org\bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,20 +20,18 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 #[CoversClass(CacheOpenAPIRoutes::class)]
-#[CoversClass(CannotReadOpenAPI::class)]
-#[CoversClass(CannotRouteOpenAPI::class)]
-#[UsesClass(\Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes::class)]
-#[UsesClass(OpenAPIFileReader::class)]
-#[UsesClass(Route::class)]
+#[CoversClass(Exception\CannotCollectRoutes::class)]
+#[UsesClass(Service\CacheOpenAPIRoutes::class)]
+#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 #[UsesClass(RouteCollector::class)]
 class CacheOpenAPIRoutesTest extends TestCase
 {
-    private vfsStreamDirectory $root;
+    private string $root;
 
     public function setUp(): void
     {
-        $this->root = vfsStream::setup('cache');
+        $this->root = vfsStream::setup('cache')->url();
     }
 
     #[Test]
@@ -55,31 +52,40 @@ class CacheOpenAPIRoutesTest extends TestCase
         );
     }
 
-    public static function failedExecutionProvider(): array
+    #[Test]
+    public function itCannotRouteFromRelativeFilePaths(): void
     {
-        return [
-            'cannot read from relative filename' => [
-                '/../../fixtures/docs/petstore-expanded.json',
-                vfsStream::url('cache') . '/routes.php',
-                Command::FAILURE,
-            ],
-            'cannot route from an api with no routes' => [
-                __DIR__ . '/../../fixtures/simple.json',
-                vfsStream::url('cache') . '/routes.php',
-                Command::FAILURE,
-            ],
-        ];
+        $filePath = './tests/fixtures/docs/petstore-expanded.json';
+
+        self::assertTrue(file_exists($filePath));
+
+        $sut = new CommandTester(new CacheOpenAPIRoutes());
+
+        $sut->execute(['openAPI' => $filePath, 'destination' => vfsStream::url('cache') . '/routes.php']);
+
+        self::assertSame(Command::FAILURE, $sut->getStatusCode());
     }
 
     #[Test]
-    #[DataProvider('failedExecutionProvider')]
-    public function executeTest(string $openAPI, string $destination, int $expectedStatusCode): void
+    public function itCannotRouteWithoutAnyRoutes(): void
     {
+        $openAPIFilePath = $this->root . '/openapi.json';
+        file_put_contents(
+            $openAPIFilePath,
+            json_encode([
+                'openapi' => '3.0.0',
+                'info' => ['title' => '', 'version' => '1.0.0'],
+                'paths' => []
+            ])
+        );
+
+        self::assertTrue(file_exists($openAPIFilePath));
+
         $sut = new CommandTester(new CacheOpenAPIRoutes());
 
-        $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
+        $sut->execute(['openAPI' => $openAPIFilePath, 'destination' => vfsStream::url('cache') . '/routes.php']);
 
-        self::assertSame($expectedStatusCode, $sut->getStatusCode());
+        self::assertSame(Command::FAILURE, $sut->getStatusCode());
     }
 
     public static function successfulExecutionProvider(): array

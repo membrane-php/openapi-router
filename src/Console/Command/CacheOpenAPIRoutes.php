@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Console\Commands;
+namespace Membrane\OpenAPIRouter\Console\Command;
 
 use Membrane\OpenAPIRouter\Console\Service\CacheOpenAPIRoutes as CacheOpenAPIRoutesService;
 use Symfony\Component\Console\Attribute\AsCommand;

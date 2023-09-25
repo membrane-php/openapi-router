@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router\Collector;
+namespace Membrane\OpenAPIRouter;
 
 use cebe\openapi\spec\OpenApi;
 use cebe\openapi\spec\Operation;
 use cebe\openapi\spec\PathItem;
-use Membrane\OpenAPIRouter\Exception\CannotProcessOpenAPI;
-use Membrane\OpenAPIRouter\Exception\CannotRouteOpenAPI;
-use Membrane\OpenAPIRouter\Router\Route\Route;
-use Membrane\OpenAPIRouter\Router\Route\Server as ServerRoute;
-use Membrane\OpenAPIRouter\Router\RouteCollection;
+use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
+use Membrane\OpenAPIRouter\Route\Route;
+use Membrane\OpenAPIRouter\Route\Server as ServerRoute;
 
 class RouteCollector
 {
@@ -20,25 +18,10 @@ class RouteCollector
         $collection = $this->collectRoutes($openApi);
 
         if ($collection === []) {
-            throw CannotRouteOpenAPI::noRoutes();
+            throw CannotCollectRoutes::noRoutes();
         }
 
         return RouteCollection::fromServers(...$collection);
-    }
-
-    /** @return array<string, string> */
-    private function getServers(OpenApi|PathItem|Operation $object): array
-    {
-        $uniqueServers = array_unique(array_map(fn($p) => rtrim($p->url, '/'), $object->servers));
-        return array_combine($uniqueServers, array_map(fn($p) => $this->getRegex($p), $uniqueServers));
-    }
-
-    private function getRegex(string $path): string
-    {
-        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
-        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
-
-        return $regex;
     }
 
     /** @return array<string, ServerRoute> */
@@ -66,19 +49,6 @@ class RouteCollector
                     $collection[$url] ??= new ServerRoute($url, $regex);
                 }
 
-                // TODO remove this conditional once OpenAPIFileReader requires operationId
-                if ($operationObject->operationId === null) {
-                    throw CannotProcessOpenAPI::missingOperationId($path, $method);
-                }
-
-                if (isset($operationIds[$operationObject->operationId])) {
-                    throw CannotProcessOpenAPI::duplicateOperationId(
-                        $operationObject->operationId,
-                        $operationIds[$operationObject->operationId],
-                        ['path' => $path, 'operation' => $method]
-                    );
-                }
-
                 if ($operationServers !== []) {
                     $servers = $operationServers;
                 } elseif ($pathServers !== []) {
@@ -96,5 +66,20 @@ class RouteCollector
         }
 
         return array_filter($collection, fn($s) => !$s->isEmpty());
+    }
+
+    /** @return array<string, string> */
+    private function getServers(OpenApi|PathItem|Operation $object): array
+    {
+        $uniqueServers = array_unique(array_map(fn($p) => rtrim($p->url, '/'), $object->servers));
+        return array_combine($uniqueServers, array_map(fn($p) => $this->getRegex($p), $uniqueServers));
+    }
+
+    private function getRegex(string $path): string
+    {
+        $regex = preg_replace('#{[^/]+}#', '([^/]+)', $path);
+        assert($regex !== null); // The pattern is hardcoded, valid regex so should not cause an error in preg_replace
+
+        return $regex;
     }
 }

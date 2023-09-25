@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Membrane\OpenAPIRouter\Router;
+namespace Membrane\OpenAPIRouter;
 
-use Membrane\OpenAPIRouter\Router\Route\Server;
+use Membrane\OpenAPIRouter\Route\Server;
 
 class RouteCollection
 {
@@ -46,7 +46,10 @@ class RouteCollection
     public static function fromServers(Server ...$servers): self
     {
         $filteredServers = array_filter($servers, fn($s) => !$s->isEmpty());
-        usort($filteredServers, fn($a, $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents());
+        usort(
+            $filteredServers,
+            fn(Server $a, Server $b) => $a->howManyDynamicComponents() <=> $b->howManyDynamicComponents()
+        );
 
         $hostedServers = $hostlessServers = [];
         foreach ($filteredServers as $server) {
