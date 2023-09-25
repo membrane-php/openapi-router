@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Membrane\OpenAPIRouter\Tests;
 
 use Generator;
+use Membrane\OpenAPIReader\FileFormat;
 use Membrane\OpenAPIReader\OpenAPIVersion;
 use Membrane\OpenAPIReader\Reader;
-use Membrane\OpenAPIRouter\Exception\CannotRouteRequest;
+use Membrane\OpenAPIRouter\Exception;
+use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router;
@@ -15,10 +17,14 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Router::class)]
-#[CoversClass(CannotRouteRequest::class)]
+#[CoversClass(Exception\CannotRouteRequest::class)]
+#[UsesClass(RouteCollection::class)]
+#[UsesClass(RouteCollector::class)]
+#[UsesClass(Route\Path::class), UsesClass(Route\Server::class)]
 class RouterTest extends TestCase
 {
     private const FIXTURES = __DIR__ . '/fixtures/';
@@ -51,25 +57,25 @@ class RouterTest extends TestCase
     {
         return [
             'petstore-expanded: incorrect server url' => [
-                CannotRouteRequest::notFound(),
+                Exception\CannotRouteRequest::notFound(),
                 'https://hatshop.dapper.net/api/pets',
                 'get',
                 self::getPetStoreRouteCollection(),
             ],
             'petstore-expanded: correct static server url but incorrect path' => [
-                CannotRouteRequest::notFound(),
+                Exception\CannotRouteRequest::notFound(),
                 'http://petstore.swagger.io/api/hats',
                 'get',
                 self::getPetStoreRouteCollection(),
             ],
             'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
-                CannotRouteRequest::notFound(),
+                Exception\CannotRouteRequest::notFound(),
                 'http://weird.io/however/but',
                 'get',
                 self::getWeirdAndWonderfulRouteCollection(),
             ],
             'petstore-expanded: correct url but incorrect method' => [
-                CannotRouteRequest::methodNotAllowed(),
+                Exception\CannotRouteRequest::methodNotAllowed(),
                 'http://petstore.swagger.io/api/pets',
                 'delete',
                 self::getPetStoreRouteCollection(),
@@ -80,7 +86,7 @@ class RouterTest extends TestCase
     #[Test]
     #[DataProvider('unsuccessfulRouteProvider')]
     public function unsuccessfulRouteTest(
-        CannotRouteRequest $expected,
+        Exception\CannotRouteRequest $expected,
         string $path,
         string $method,
         RouteCollection $operationCollection
@@ -140,49 +146,172 @@ class RouterTest extends TestCase
         ];
     }
 
-    #[Test]
-    #[DataProvider('successfulRouteProvider')]
-    public function successfulRouteTest(
-        string $expected,
-        string $path,
-        string $method,
-        RouteCollection $operationCollection
-    ): void {
-        $sut = new Router($operationCollection);
-
-        $actual = $sut->route($path, $method);
-
-        self::assertSame($expected, $actual);
-    }
-
-    public static function provideRoutingPriorities(): Generator
+    public static function providePathsToPrioritise(): Generator
     {
-        yield 'completely static path prioritise over anything dynamic' => [
-            'findSpongeCakes',
-            '/cakes/sponge',
-            'get',
-            self::getAPieceOfCakeRouteCollection()
+        $operation = fn(string $operationId) => [
+            'operationId' => $operationId,
+            'responses' => [200 => ['description' => '']]
         ];
-        yield 'partially dynamic path to prioritise over anything with more dynamic parts' => [
-            'findCakesByIcing',
-            '/cakes/chocolate',
-            'get',
-            self::getAPieceOfCakeRouteCollection()
+        $pathParameter = fn(string $name) => [
+            'name' => $name,
+            'in' => 'path',
+            'required' => true,
+            'schema' => ['type' => 'string']
         ];
+
+        $testCases = [
+            'static > dynamic' => [
+                '/static/path',
+                [
+                    '/static/path' => ['get' => $operation('first')],
+                    '/{dynamic}/{path}' => [
+                        'get' => $operation('second'),
+                        'parameters' => [$pathParameter('dynamic'), $pathParameter('path')]
+                    ]
+                ]
+            ],
+            'partially dynamic > completely dynamic' => [
+                '/which/path',
+                [
+                    '/{partially-dynamic}/path' => [
+                        'get' => $operation('first'),
+                        'parameters' => [$pathParameter('partially-dynamic')]
+                    ],
+                    '/{dynamic}/{path}' => [
+                        'get' => $operation('second'),
+                        'parameters' => [$pathParameter('dynamic'), $pathParameter('path')]
+                    ],
+                ]
+            ],
+            'less dynamic components > more dynamic components' => [
+                '/which/path/to/pick',
+                [
+                    '/{dynamic}/path/to/pick' => [
+                        'get' => $operation('first'),
+                        'parameters' => [$pathParameter('partially-dynamic')]
+                    ],
+                    '/{dynamic}/{path}/to/pick' => [
+                        'get' => $operation('second'),
+                        'parameters' => [$pathParameter('dynamic'), $pathParameter('path')]
+                    ],
+                ]
+            ]
+        ];
+
+        $openAPI = fn(array $paths) => json_encode([
+            'openapi' => '3.0.0',
+            'info' => ['title' => '', 'version' => '1.0.0'],
+            'paths' => $paths,
+        ]);
+
+        foreach ($testCases as $description => $testCase) {
+            yield $description => [$testCase[0], $openAPI($testCase[1])];
+            yield "$description (order of paths reversed)" => [$testCase[0], $openAPI(array_reverse($testCase[1]))];
+        }
     }
 
-    #[Test, TestDox('When routing the priority will be paths with less dynamic components first')]
-    #[DataProvider('provideRoutingPriorities')]
-    public function itWillPrioritiseRoutesWithMoreStaticComponentsFirst(
-        string $expectedOperationId,
-        string $url,
-        string $method,
-        RouteCollection $routeCollection
-    ): void {
-        $sut = new Router($routeCollection);
+    #[Test, TestDox('Relative urls are prioritised based on the number of dynamic components they have, least first')]
+    #[DataProvider('providePathsToPrioritise')]
+    public function itPrioritisesPathsCorrectly(string $url, string $openAPI): void
+    {
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+            ->readFromString($openAPI, FileFormat::Json);
 
-        $actualOperationId = $sut->route($url, $method);
+        $routeCollection = (new RouteCollector())
+            ->collect($openAPI);
 
-        self::assertSame($expectedOperationId, $actualOperationId);
+        $priority = (new Router($routeCollection))
+            ->route($url, 'get');
+
+        self::assertSame('first', $priority);
+    }
+
+    public static function provideServersToPrioritise(): Generator
+    {
+        $minimalPath = fn(string $operationId) => [
+            'get' => [
+                'operationId' => $operationId,
+                'responses' => [200 => ['description' => '']]
+            ]
+        ];
+
+        $testCases = [
+            'longer > shorter' => [
+                'http://this/path/please',
+                [['url' => 'http://this'], ['url' => 'http://this/path']],
+                ['/please' => $minimalPath('first'), '/path/please' => $minimalPath('second')]
+            ],
+            'static > dynamic' => [
+                'http://this/path/please',
+                [
+                    ['url' => 'http://this'],
+                    [
+                        'url' => 'http://{demonstrative-pronoun}/path',
+                        'variables' => ['demonstrative-pronoun' => ['default' => 'this']]
+                    ]
+                ],
+                ['/path/please' => $minimalPath('first'), '/please' => $minimalPath('second')]
+            ],
+            'less dynamic components > more dynamic components' => [
+                'http://this/path/pretty/please',
+                [
+                    [
+                        'url' => 'http://{demonstrative-pronoun}/{route}/pretty',
+                        'variables' => [
+                            'demonstrative-pronoun' => ['default' => 'this'],
+                            'route' => ['default' => 'path']
+                        ]
+                    ],
+                    [
+                        'url' => 'http://{demonstrative-pronoun}/path',
+                        'variables' => ['demonstrative-pronoun' => ['default' => 'this']]
+                    ],
+                ],
+                ['/pretty/please' => $minimalPath('first'), '/please' => $minimalPath('second')]
+            ]
+
+        ];
+
+        $openAPI = fn(array $servers, array $paths) => json_encode([
+            'openapi' => '3.0.0',
+            'info' => ['title' => '', 'version' => '1.0.0'],
+            'servers' => $servers,
+            'paths' => $paths,
+        ]);
+
+        foreach ($testCases as $description => $testCase) {
+            yield $description => [
+                $testCase[0],
+                $openAPI($testCase[1], $testCase[2])
+            ];
+            yield "$description (order of servers reversed)" => [
+                $testCase[0],
+                $openAPI(array_reverse($testCase[1]), $testCase[2])
+            ];
+            yield "$description (order of paths reversed)" => [
+                $testCase[0],
+                $openAPI($testCase[1], array_reverse($testCase[2]))
+            ];
+            yield "$description (order of paths and servers reversed)" => [
+                $testCase[0],
+                $openAPI(array_reverse($testCase[1]), array_reverse($testCase[2]))
+            ];
+        }
+    }
+
+    #[Test, TestDox('Servers are prioritised by length and number of dynamic components')]
+    #[DataProvider('provideServersToPrioritise')]
+    public function itPrioritisesServersCorrectly(string $url, string $openAPI): void
+    {
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+            ->readFromString($openAPI, FileFormat::Json);
+
+        $routeCollection = (new RouteCollector())
+            ->collect($openAPI);
+
+        $priority = (new Router($routeCollection))
+            ->route($url, 'get');
+
+        self::assertSame('first', $priority);
     }
 }

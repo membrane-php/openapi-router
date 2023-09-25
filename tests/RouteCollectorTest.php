@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(RouteCollector::class)]
 #[CoversClass(CannotCollectRoutes::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 class RouteCollectorTest extends TestCase
 {
@@ -42,6 +42,35 @@ class RouteCollectorTest extends TestCase
         self::expectExceptionObject(CannotCollectRoutes::noRoutes());
 
         (new RouteCollector())->collect($openAPI);
+    }
+
+    #[Test]
+    public function removesDuplicateServers(): void
+    {
+        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+            ->readFromString(
+                json_encode([
+                    'openapi' => '3.0.0',
+                    'info' => ['title' => '', 'version' => '1.0.0'],
+                    'servers' => [
+                        ['url' => 'https://www.server.net'],
+                        ['url' => 'https://www.server.net/'],
+                    ],
+                    'paths' => [
+                        '/path' => [
+                            'get' => [
+                                'operationId' => 'get-path',
+                                'responses' => [200 => ['description' => 'Successful Response']]
+                            ]
+                        ]
+                    ]
+                ]),
+                FileFormat::Json
+            );
+
+        $routeCollection = (new RouteCollector())->collect($openAPI);
+
+        self::assertCount(1, $routeCollection->routes['hosted']['static']);
     }
 
     public static function collectTestProvider(): Generator

@@ -6,21 +6,20 @@ namespace Membrane\OpenAPIRouter\Exception;
 
 /* This exception occurs when the request does not match any routes in your route collection. */
 
-class CannotRouteRequest extends \RuntimeException
+use RuntimeException;
+
+class CannotRouteRequest extends RuntimeException
 {
     public const NOT_FOUND = 404;
     public const METHOD_NOT_ALLOWED = 405;
 
     public static function fromErrorCode(int $errorCode): self
     {
-        switch ($errorCode) {
-            case self::NOT_FOUND:
-                return self::notFound();
-            case self::METHOD_NOT_ALLOWED:
-                return self::methodNotAllowed();
-            default:
-                return new self();
-        }
+        assert($errorCode === 404 || $errorCode === 405);
+        return match ($errorCode) {
+            self::NOT_FOUND => self::notFound(),
+            self::METHOD_NOT_ALLOWED => self::methodNotAllowed(),
+        };
     }
 
     public static function notFound(): self

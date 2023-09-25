@@ -20,7 +20,7 @@ use Psr\Log\LoggerInterface;
 #[CoversClass(CacheOpenAPIRoutes::class)]
 #[CoversClass(CannotCollectRoutes::class)]
 #[UsesClass(RouteCollector::class)]
-#[UsesClass(Route\Route::class), UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
+#[UsesClass(Route\Server::class), UsesClass(Route\Path::class)]
 #[UsesClass(RouteCollection::class)]
 class CacheOpenAPIRoutesTest extends TestCase
 {

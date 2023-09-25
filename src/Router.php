@@ -52,8 +52,6 @@ class Router
     {
         // Check static servers first
         $staticServers = $servers['static'];
-        // Prioritize server names of greater length
-        uksort($staticServers, fn($a, $b) => strlen($a) <=> strlen($b));
 
         foreach ($staticServers as $staticServer => $paths) {
             if (str_starts_with($url, $staticServer)) {
