@@ -4,9 +4,13 @@
   "license": "MPL-2.0",
   "autoload": {
     "psr-4": {
-      "Membrane\\OpenAPIRouter\\": "src/",
-      "Membrane\\OpenAPIRouter\\Fixtures\\": "tests/fixtures/",
-      "Membrane\\OpenAPIRouter\\Tests\\": "tests/"
+      "Membrane\\OpenAPIRouter\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Membrane\\OpenAPIRouter\\Tests\\": "tests/",
+      "Membrane\\OpenAPIRouter\\Tests\\Fixtures\\": "tests/fixtures/"
     }
   },
   "require": {
