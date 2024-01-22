@@ -6,8 +6,8 @@ namespace Membrane\OpenAPIRouter\Tests;
 
 use Generator;
 use Membrane\OpenAPIReader\FileFormat;
+use Membrane\OpenAPIReader\MembraneReader;
 use Membrane\OpenAPIReader\OpenAPIVersion;
-use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
 use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
@@ -29,7 +29,7 @@ class RouteCollectorTest extends TestCase
     #[Test]
     public function throwExceptionIfThereAreNoRoutes(): void
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromString(
                 json_encode([
                     'openapi' => '3.0.0',
@@ -47,7 +47,7 @@ class RouteCollectorTest extends TestCase
     #[Test]
     public function removesDuplicateServers(): void
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromString(
                 json_encode([
                     'openapi' => '3.0.0',
@@ -301,7 +301,7 @@ class RouteCollectorTest extends TestCase
     #[DataProvider('collectTestProvider')]
     public function collectTest(RouteCollection $expected, string $apiFilePath): void
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0, OpenAPIVersion::Version_3_1]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromAbsoluteFilePath($apiFilePath);
 
         self::assertEquals($expected, (new RouteCollector())->collect($openAPI));
