@@ -17,11 +17,12 @@ class RouteCollector
         foreach ($openApi->paths as $path => $pathObject) {
             foreach ($pathObject->getOperations() as $method => $operation) {
                 foreach ($operation->servers as $server) {
-                    $url = rtrim($server->url, '/');
-                    if (!isset($collection[$url])) {
-                        $collection[$url] = new Server($url);
-                    }
-                    $collection[$url]->addRoute($path, $method, $operation->operationId);
+                    $collection[$server->url] ??= new Server($server->url);
+                    $collection[$server->url]->addRoute(
+                        $path,
+                        $method,
+                        $operation->operationId
+                    );
                 }
             }
         }
