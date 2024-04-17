@@ -6,8 +6,8 @@ namespace Membrane\OpenAPIRouter\Tests;
 
 use Generator;
 use Membrane\OpenAPIReader\FileFormat;
+use Membrane\OpenAPIReader\MembraneReader;
 use Membrane\OpenAPIReader\OpenAPIVersion;
-use Membrane\OpenAPIReader\Reader;
 use Membrane\OpenAPIRouter\Exception;
 use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
@@ -31,7 +31,7 @@ class RouterTest extends TestCase
 
     private static function getPetStoreRouteCollection(): RouteCollection
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
                 ->readFromAbsoluteFilePath(self::FIXTURES . 'docs/petstore-expanded.json');
 
         return (new RouteCollector())->collect($openAPI);
@@ -39,7 +39,7 @@ class RouterTest extends TestCase
 
     private static function getWeirdAndWonderfulRouteCollection(): RouteCollection
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromAbsoluteFilePath(self::FIXTURES . 'WeirdAndWonderful.json');
 
         return (new RouteCollector())->collect($openAPI);
@@ -47,7 +47,7 @@ class RouterTest extends TestCase
 
     private static function getAPieceOfCakeRouteCollection(): RouteCollection
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromAbsoluteFilePath(self::FIXTURES . 'APIeceOfCake.json');
 
         return (new RouteCollector())->collect($openAPI);
@@ -214,7 +214,7 @@ class RouterTest extends TestCase
     #[DataProvider('providePathsToPrioritise')]
     public function itPrioritisesPathsCorrectly(string $url, string $openAPI): void
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromString($openAPI, FileFormat::Json);
 
         $routeCollection = (new RouteCollector())
@@ -303,7 +303,7 @@ class RouterTest extends TestCase
     #[DataProvider('provideServersToPrioritise')]
     public function itPrioritisesServersCorrectly(string $url, string $openAPI): void
     {
-        $openAPI = (new Reader([OpenAPIVersion::Version_3_0]))
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
             ->readFromString($openAPI, FileFormat::Json);
 
         $routeCollection = (new RouteCollector())
