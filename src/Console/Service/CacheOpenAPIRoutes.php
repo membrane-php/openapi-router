@@ -19,8 +19,13 @@ class CacheOpenAPIRoutes
     ) {
     }
 
-    public function cache(string $openAPIFilePath, string $cacheDestination): bool
-    {
+    public function cache(
+        string $openAPIFilePath,
+        string $cacheDestination,
+        bool $ignoreServers = false,
+        //@todo add support for this in the reader first
+        // bool $hostlessFallback,
+    ): bool {
         $existingFilePath = $cacheDestination;
         while (!file_exists($existingFilePath)) {
             $existingFilePath = dirname($existingFilePath);
@@ -37,6 +42,15 @@ class CacheOpenAPIRoutes
             $this->logger->error($e->getMessage());
             return false;
         }
+
+        if ($ignoreServers) {
+            $openApi = $openApi->withoutServers();
+        }
+
+        //@todo add support for this in reader first
+        // if ($hostlessFallback) {
+        //     $openApi = $openApi->withHostlessFallback();
+        // }
 
         try {
             $routeCollection = (new RouteCollector())->collect($openApi);
