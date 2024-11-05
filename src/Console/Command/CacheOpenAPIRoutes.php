@@ -33,7 +33,7 @@ class CacheOpenAPIRoutes extends Command
         );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $openAPIFilePath = $input->getArgument('openAPI');
         assert(is_string($openAPIFilePath));
