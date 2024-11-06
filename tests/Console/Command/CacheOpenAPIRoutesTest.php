@@ -10,9 +10,11 @@ use Membrane\OpenAPIRouter\Exception;
 use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
+use Membrane\OpenAPIRouter\Tests\Fixtures\ProvidesApiAndRoutes;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -70,248 +72,59 @@ class CacheOpenAPIRoutesTest extends TestCase
     public function itCannotRouteWithoutAnyRoutes(): void
     {
         $openAPIFilePath = $this->root . '/openapi.json';
-        file_put_contents(
-            $openAPIFilePath,
-            json_encode([
-                'openapi' => '3.0.0',
-                'info' => ['title' => '', 'version' => '1.0.0'],
-                'paths' => []
-            ])
-        );
-
-        self::assertTrue(file_exists($openAPIFilePath));
+        file_put_contents($openAPIFilePath, json_encode([
+            'openapi' => '3.0.0',
+            'info' => ['title' => '', 'version' => '1.0.0'],
+            'paths' => []
+        ]));
 
         $sut = new CommandTester(new CacheOpenAPIRoutes());
 
-        $sut->execute(['openAPI' => $openAPIFilePath, 'destination' => vfsStream::url('cache') . '/routes.php']);
+        $sut->execute([
+            'openAPI' => $openAPIFilePath,
+            'destination' => vfsStream::url('cache/routes.php'),
+        ]);
 
         self::assertSame(Command::FAILURE, $sut->getStatusCode());
     }
 
-    public static function successfulExecutionProvider(): array
+    #[Test]
+    #[DataProviderExternal(ProvidesApiAndRoutes::class, 'defaultBehaviour')]
+    public function itCachesRoutes(string $openAPI, RouteCollection $expected): void
     {
-        $petStoreRoutes = new RouteCollection([
-            'hosted' => [
-                'static' => [
-                    'http://petstore.swagger.io/api' => [
-                        'static' => [
-                            '/pets' => [
-                                'get' => 'findPets',
-                                'post' => 'addPet',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
-                            'paths' => [
-                                '/pets/{id}' => [
-                                    'get' => 'find pet by id',
-                                    'delete' => 'deletePet',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|)#',
-                    'servers' => [],
-                ],
-            ],
-            'hostless' => [
-                'static' => [],
-                'dynamic' => [
-                    'regex' => '#^(?|)#',
-                    'servers' => [],
-                ],
-            ],
-        ]);
-        $weirdAndWonderfulRoutes = new RouteCollection([
-            'hosted' => [
-                'static' => [
-                    'http://weirdest.com' => [
-                        'static' => [
-                            '/however' => [
-                                'put' => 'put-however',
-                                'post' => 'post-however',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
-                            'paths' => [
-                                '/and/{name}' => [
-                                    'get' => 'get-and',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'http://weirder.co.uk' => [
-                        'static' => [
-                            '/however' => [
-                                'get' => 'get-however',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|/and/([^/]+)(*MARK:/and/{name}))$#',
-                            'paths' => [
-                                '/and/{name}' => [
-                                    'put' => 'put-and',
-                                    'post' => 'post-and',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'http://wonderful.io' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    'http://wonderful.io/and' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    'http://wonderful.io/or' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|http://weird.io/([^/]+)(*MARK:http://weird.io/{conjunction}))#',
-                    'servers' => [
-                        'http://weird.io/{conjunction}' => [
-                            'static' => [
-                                '/or' => [
-                                    'post' => 'post-or',
-                                ],
-                                '/xor' => [
-                                    'delete' => 'delete-xor',
-                                ],
-                            ],
-                            'dynamic' => [
-                                'regex' => '#^(?|)$#',
-                                'paths' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            'hostless' => [
-                'static' => [
-                    '' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                    '/v1' => [
-                        'static' => [
-                            '/or' => [
-                                'post' => 'post-or',
-                            ],
-                            '/xor' => [
-                                'delete' => 'delete-xor',
-                            ],
-                        ],
-                        'dynamic' => [
-                            'regex' => '#^(?|)$#',
-                            'paths' => [],
-                        ],
-                    ],
-                ],
-                'dynamic' => [
-                    'regex' => '#^(?|/([^/]+)(*MARK:/{version}))#',
-                    'servers' => [
-                        '/{version}' => [
-                            'static' => [
-                                '/or' => [
-                                    'post' => 'post-or',
-                                ],
-                                '/xor' => [
-                                    'delete' => 'delete-xor',
-                                ],
-                            ],
-                            'dynamic' => [
-                                'regex' => '#^(?|)$#',
-                                'paths' => [],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ]);
-        return [
-            'successfully routes petstore-expanded.json' => [
-                __DIR__ . '/../../fixtures/docs/petstore-expanded.json',
-                vfsStream::url('cache/routes.php'),
-                Command::SUCCESS,
-                $petStoreRoutes
-            ],
-            'successfully routes the WeirdAndWonderful.json' => [
-                __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
-                vfsStream::url('cache/routes.php'),
-                Command::SUCCESS,
-                $weirdAndWonderfulRoutes
-            ],
-            'successfully routes the WeirdAndWonderful.json and caches in a nested directory' => [
-                __DIR__ . '/../../fixtures/WeirdAndWonderful.json',
-                vfsStream::url('cache/nested-cache/nester-cache/nestest-cache/routes.php'),
-                Command::SUCCESS,
-                $weirdAndWonderfulRoutes
-            ]
-        ];
+        $cachePath = vfsStream::url('cache/routes.php');
+
+        $sut = new CommandTester(new CacheOpenAPIRoutes());
+
+        $sut->execute(['openAPI' => $openAPI, 'destination' => $cachePath]);
+
+        self::assertSame(Command::SUCCESS, $sut->getStatusCode());
+
+        $actual = eval('?>' . file_get_contents($cachePath));
+
+        self::assertEquals($expected, $actual);
     }
 
     #[Test]
-    #[DataProvider('successfulExecutionProvider')]
-    public function successfulExecutionTest(
+    #[DataProviderExternal(ProvidesApiAndRoutes::class, 'ignoringServers')]
+    public function itCachesRoutesIgnoringServers(
         string $openAPI,
-        string $destination,
-        int $expectedStatusCode,
-        RouteCollection $expectedRouteCollection
+        RouteCollection $expected,
     ): void {
+        $cachePath = vfsStream::url('cache/routes.php');
+
         $sut = new CommandTester(new CacheOpenAPIRoutes());
 
-        $sut->execute(['openAPI' => $openAPI, 'destination' => $destination]);
+        $sut->execute([
+            'openAPI' => $openAPI,
+            'destination' => $cachePath,
+            '--ignore-servers' => true,
+        ]);
 
-        self::assertSame($expectedStatusCode, $sut->getStatusCode());
+        self::assertSame(Command::SUCCESS, $sut->getStatusCode());
 
-        $actualRouteCollection = eval('?>' . file_get_contents($destination));
+        $actual = eval('?>' . file_get_contents($cachePath));
 
-        self::assertEquals($expectedRouteCollection, $actualRouteCollection);
+        self::assertEquals($expected, $actual);
     }
 }
