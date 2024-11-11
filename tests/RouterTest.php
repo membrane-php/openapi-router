@@ -13,6 +13,8 @@ use Membrane\OpenAPIRouter\Route;
 use Membrane\OpenAPIRouter\RouteCollection;
 use Membrane\OpenAPIRouter\RouteCollector;
 use Membrane\OpenAPIRouter\Router;
+use Membrane\OpenAPIRouter\Tests\Fixtures\ProvidesPetstoreExpanded;
+use Membrane\OpenAPIRouter\Tests\Fixtures\ProvidesWeirdAndWonderful;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,32 +29,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Route\Path::class), UsesClass(Route\Server::class)]
 class RouterTest extends TestCase
 {
-    private const FIXTURES = __DIR__ . '/fixtures/';
-
-    private static function getPetStoreRouteCollection(): RouteCollection
-    {
-        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
-                ->readFromAbsoluteFilePath(self::FIXTURES . 'docs/petstore-expanded.json');
-
-        return (new RouteCollector())->collect($openAPI);
-    }
-
-    private static function getWeirdAndWonderfulRouteCollection(): RouteCollection
-    {
-        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
-            ->readFromAbsoluteFilePath(self::FIXTURES . 'WeirdAndWonderful.json');
-
-        return (new RouteCollector())->collect($openAPI);
-    }
-
-    private static function getAPieceOfCakeRouteCollection(): RouteCollection
-    {
-        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
-            ->readFromAbsoluteFilePath(self::FIXTURES . 'APIeceOfCake.json');
-
-        return (new RouteCollector())->collect($openAPI);
-    }
-
     public static function unsuccessfulRouteProvider(): array
     {
         return [
@@ -60,25 +36,25 @@ class RouterTest extends TestCase
                 Exception\CannotRouteRequest::notFound(),
                 'https://hatshop.dapper.net/api/pets',
                 'get',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
             'petstore-expanded: correct static server url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
                 'http://petstore.swagger.io/api/hats',
                 'get',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
             'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
                 'http://weird.io/however/but',
                 'get',
-                self::getWeirdAndWonderfulRouteCollection(),
+                ProvidesWeirdAndWonderful::getRoutes(),
             ],
             'petstore-expanded: correct url but incorrect method' => [
                 Exception\CannotRouteRequest::methodNotAllowed(),
                 'http://petstore.swagger.io/api/pets',
                 'delete',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
         ];
     }
@@ -105,43 +81,43 @@ class RouterTest extends TestCase
                 'findPets',
                 'http://petstore.swagger.io/api/pets',
                 'get',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
             'petstore: /pets/{id} path, get method' => [
                 'find pet by id',
                 'http://petstore.swagger.io/api/pets/1',
                 'get',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
             'petstore: /pets/{id} path, delete method' => [
                 'deletePet',
                 'http://petstore.swagger.io/api/pets/1',
                 'delete',
-                self::getPetStoreRouteCollection(),
+                ProvidesPetstoreExpanded::getRoutes(),
             ],
             'WeirdAndWonderful: /v1/or path, post method' => [
                 'post-or',
                 '/v1/or',
                 'post',
-                self::getWeirdAndWonderfulRouteCollection(),
+                ProvidesWeirdAndWonderful::getRoutes(),
             ],
             'WeirdAndWonderful: http://www.arbitrary.com/v1/or path, post method' => [
                 'post-or',
                 '/v1/or',
                 'post',
-                self::getWeirdAndWonderfulRouteCollection(),
+                ProvidesWeirdAndWonderful::getRoutes(),
             ],
             'WeirdAndWonderful: http://weird.io/however/or path, post method' => [
                 'post-or',
                 'http://weird.io/however/or',
                 'post',
-                self::getWeirdAndWonderfulRouteCollection(),
+                ProvidesWeirdAndWonderful::getRoutes(),
             ],
             'WeirdAndWonderful: /{version}/xor path, delete method' => [
                 'delete-xor',
                 '/12/xor',
                 'delete',
-                self::getWeirdAndWonderfulRouteCollection(),
+                ProvidesWeirdAndWonderful::getRoutes(),
             ],
         ];
     }
