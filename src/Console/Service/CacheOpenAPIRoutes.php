@@ -36,8 +36,10 @@ class CacheOpenAPIRoutes
         }
 
         try {
-            $openApi = (new MembraneReader([OpenAPIVersion::Version_3_0]))
-                ->readFromAbsoluteFilePath($openAPIFilePath);
+            $openApi = (new MembraneReader([
+                OpenAPIVersion::Version_3_0,
+                OpenAPIVersion::Version_3_1
+            ]))->readFromAbsoluteFilePath($openAPIFilePath);
         } catch (CannotRead $e) {
             $this->logger->error($e->getMessage());
             return false;

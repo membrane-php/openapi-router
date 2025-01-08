@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Membrane\OpenAPIRouter;
 
-use Membrane\OpenAPIReader\ValueObject\Valid\V30\OpenAPI;
+use Membrane\OpenAPIReader\ValueObject\Valid\{V30, V31};
 use Membrane\OpenAPIRouter\Exception\CannotCollectRoutes;
 use Membrane\OpenAPIRouter\Route\Server;
 
 class RouteCollector
 {
-    public function collect(OpenAPI $openApi): RouteCollection
+    public function collect(V30\OpenAPI|V31\OpenAPI $openApi): RouteCollection
     {
         $collection = [];
 
