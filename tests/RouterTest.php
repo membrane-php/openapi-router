@@ -36,13 +36,13 @@ class RouterTest extends TestCase
                 Exception\CannotRouteRequest::notFound(),
                 'https://hatshop.dapper.net/api/pets',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore-expanded: correct static server url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
                 'http://petstore.swagger.io/api/hats',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
@@ -54,7 +54,7 @@ class RouterTest extends TestCase
                 Exception\CannotRouteRequest::methodNotAllowed(),
                 'http://petstore.swagger.io/api/pets',
                 'delete',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
         ];
     }
@@ -81,19 +81,19 @@ class RouterTest extends TestCase
                 'findPets',
                 'http://petstore.swagger.io/api/pets',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore: /pets/{id} path, get method' => [
                 'find pet by id',
                 'http://petstore.swagger.io/api/pets/1',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore: /pets/{id} path, delete method' => [
                 'deletePet',
                 'http://petstore.swagger.io/api/pets/1',
                 'delete',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'WeirdAndWonderful: /v1/or path, post method' => [
                 'post-or',
