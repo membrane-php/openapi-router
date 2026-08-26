@@ -14,7 +14,8 @@ final class Server implements JsonSerializable
     private array $paths = [];
 
     public function __construct(
-        public readonly string $url
+        public readonly string $url,
+        public readonly string $source = '',
     ) {
         $regex = preg_replace('#{[^/]+}#', '([^/]+)', $this->url);
         assert(is_string($regex));
@@ -27,7 +28,7 @@ final class Server implements JsonSerializable
             $this->paths[$pathUrl] = new Path($pathUrl);
         }
 
-        $this->paths[$pathUrl]->addRoute($method, $operationId);
+        $this->paths[$pathUrl]->addRoute($method, $operationId, $this->source);
     }
 
     public function isDynamic(): bool
@@ -51,9 +52,12 @@ final class Server implements JsonSerializable
     }
 
     /** @return array{
-     *          'static': array<string, array<string,string>>,
-     *          'dynamic': array{'regex': string, 'paths': array<string, array<string,string>>}
-     *          }
+     *          'static': array<string, array<string, array{operationId: string, source: string}>>,
+     *          'dynamic': array{
+     *              'regex': string,
+     *              'paths': array<string, array<string, array{operationId: string, source: string}>>
+     *           }
+     *      }
      */
     public function jsonSerialize(): array
     {

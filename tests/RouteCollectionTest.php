@@ -24,13 +24,13 @@ class RouteCollectionTest extends TestCase
                     'static' => [
                         'https://www.server.io' => [
                             'static' => [
-                                '/static/path' => ['post' => 'post-static-path'],
+                                '/static/path' => ['post' => ['operationId' => 'post-static-path', 'source' => '']],
                             ],
                             'dynamic' => [
                                 'regex' => '#^(?|/([^/]+)/path(*MARK:/{dynamic}/path)|/([^/]+)/([^/]+)/path(*MARK:/{very}/{dynamic}/path))$#',
                                 'paths' => [
-                                    '/{dynamic}/path' => ['get' => 'get-dynamic-path'],
-                                    '/{very}/{dynamic}/path' => ['patch' => 'patch-very-dynamic-path']
+                                    '/{dynamic}/path' => ['get' => ['operationId' => 'get-dynamic-path', 'source' => '']],
+                                    '/{very}/{dynamic}/path' => ['patch' => ['operationId' => 'patch-very-dynamic-path', 'source' => '']]
                                 ]
                             ]
                         ]
@@ -42,14 +42,14 @@ class RouteCollectionTest extends TestCase
                             'https://www.server.net/{version}' => [
                                 'static' => [
                                     '/static/path' => [
-                                        'delete' => 'delete-static-path',
-                                        'get' => 'get-static-path',
+                                        'delete' => ['operationId' => 'delete-static-path', 'source' => ''],
+                                        'get' => ['operationId' => 'get-static-path', 'source' => ''],
                                     ]
                                 ],
                                 'dynamic' => [
                                     'regex' => '#^(?|/([^/]+)/path(*MARK:/{dynamic}/path))$#',
                                     'paths' => [
-                                        '/{dynamic}/path' => ['post' => 'post-dynamic-path']
+                                        '/{dynamic}/path' => ['post' => ['operationId' => 'post-dynamic-path', 'source' => '']]
                                     ],
                                 ]
                             ],
@@ -58,7 +58,7 @@ class RouteCollectionTest extends TestCase
                                 'dynamic' => [
                                     'regex' => '#^(?|/([^/]+)/([^/]+)/([^/]+)(*MARK:/{very}/{dynamic}/{path}}))$#',
                                     'paths' => [
-                                        '/{very}/{dynamic}/{path}}' => ['post' => 'post-very-dynamic-path']
+                                        '/{very}/{dynamic}/{path}}' => ['post' => ['operationId' => 'post-very-dynamic-path', 'source' => '']]
                                     ],
                                 ]
                             ],
@@ -72,7 +72,7 @@ class RouteCollectionTest extends TestCase
                             'dynamic' => [
                                 'regex' => '#^(?|/([^/]+)/([^/]+)/([^/]+)(*MARK:/{very}/{dynamic}/{path}}))$#',
                                 'paths' => [
-                                    '/{very}/{dynamic}/{path}}' => ['get' => 'get-very-dynamic-path']
+                                    '/{very}/{dynamic}/{path}}' => ['get' => ['operationId' => 'get-very-dynamic-path', 'source' => '']]
                                 ]
                             ]
                         ],

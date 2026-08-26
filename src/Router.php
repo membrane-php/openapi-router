@@ -19,14 +19,14 @@ class Router
     {
         $hostedMatch = $this->routeServer($this->routeCollection->routes['hosted'], $url, $method);
         if ($hostedMatch !== null) {
-            return $hostedMatch;
+            return $hostedMatch['operationId'];
         }
 
         $hostlessUrl = parse_url($url, PHP_URL_PATH);
         if ($hostlessUrl !== null && $hostlessUrl !== false) {
             $hostlessMatch = $this->routeServer($this->routeCollection->routes['hostless'], $hostlessUrl, $method);
             if ($hostlessMatch !== null) {
-                return $hostlessMatch;
+                return $hostlessMatch['operationId'];
             }
         }
 
@@ -36,19 +36,20 @@ class Router
     /**
      * @param array{
      *                  'static': array<array{
-     *                  'static': string[][],
-     *                  'dynamic': array{'regex': string, 'paths': string[][]}
+     *                  'static': Paths,
+     *                  'dynamic': array{'regex': string, 'paths': Paths}
      *              }>,
      *              'dynamic': array{
      *                  'regex': string,
      *                  'servers': array<array{
-     *                      'static': string[][],
-     *                      'dynamic': array{'regex': string, 'paths': string[][]}
+     *                      'static': Paths,
+     *                      'dynamic': array{'regex': string, 'paths': Paths}
      *                  }>
      *              }
      *          } $servers
+     * @return ?RouteInfo
      */
-    private function routeServer(array $servers, string $url, string $method): ?string
+    private function routeServer(array $servers, string $url, string $method): ?array
     {
         // Check static servers first
         $staticServers = $servers['static'];
@@ -82,10 +83,10 @@ class Router
     }
 
     /** @param array{
-     *          'static': array<string,array<string,string>>,
-     *          'dynamic': array{'regex': string, 'paths': array<string,array<string,string>>}
+     *          'static': Paths,
+     *          'dynamic': array{'regex': string, 'paths': Paths}
      *     } $paths
-     * @return string[]
+     * @return ?PathInfo
      */
     private function routePath(string $server, array $paths, string $url): ?array
     {
@@ -106,8 +107,11 @@ class Router
         return null;
     }
 
-    /** @param string[] $path */
-    private function routeOperation(array $path, string $method): ?string
+    /**
+     * @param PathInfo $path
+     * @return ?RouteInfo
+     */
+    private function routeOperation(array $path, string $method): ?array
     {
         if (isset($path[$method])) {
             return $path[$method];

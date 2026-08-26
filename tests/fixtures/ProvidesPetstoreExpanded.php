@@ -20,12 +20,18 @@ final class ProvidesPetstoreExpanded
             'hosted' => [
                 'static' => ['http://petstore.swagger.io/api' => [
                     'static' => [
-                        '/pets' => ['get' => 'findPets', 'post' => 'addPet'],
+                        '/pets' => [
+                            'get' => ['operationId' => 'findPets', 'source' => ''],
+                            'post' => ['operationId' => 'addPet', 'source' => '']
+                        ],
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
                         'paths' => [
-                            '/pets/{id}' => ['get' => 'find pet by id', 'delete' => 'deletePet'],
+                            '/pets/{id}' => [
+                                'get' => ['operationId' => 'find pet by id', 'source' => ''],
+                                'delete' => ['operationId' => 'deletePet', 'source' => '']
+                            ],
                         ],
                     ],
                 ]],
@@ -42,12 +48,18 @@ final class ProvidesPetstoreExpanded
             'hostless' => [
                 'static' => ['' => [
                     'static' => [
-                        '/pets' => ['get' => 'findPets', 'post' => 'addPet'],
+                        '/pets' => [
+                            'get' => ['operationId' => 'findPets', 'source' => ''],
+                            'post' => ['operationId' => 'addPet', 'source' => ''],
+                        ],
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/pets/([^/]+)(*MARK:/pets/{id}))$#',
                         'paths' => [
-                            '/pets/{id}' => ['get' => 'find pet by id', 'delete' => 'deletePet'],
+                            '/pets/{id}' => [
+                                'get' => ['operationId' => 'find pet by id', 'source' => ''],
+                                'delete' => ['operationId' => 'deletePet', 'source' => ''],
+                            ],
                         ],
                     ],
                 ]],

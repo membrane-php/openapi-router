@@ -20,15 +20,23 @@ final class ProvidesTrainTravel
             'hosted' => [
                 'static' => ['https://api.example.com' => [
                     'static' => [
-                        '/stations' => ['get' => 'get-stations'],
-                        '/trips' => ['get' => 'get-trips'],
-                        '/bookings' => ['get' => 'get-bookings', 'post' => 'create-booking'],
+                        '/stations' => ['get' => ['operationId' => 'get-stations', 'source' => '']],
+                        '/trips' => ['get' => ['operationId' => 'get-trips', 'source' => '']],
+                        '/bookings' => [
+                            'get' => ['operationId' => 'get-bookings', 'source' => ''],
+                            'post' => ['operationId' => 'create-booking', 'source' => ''],
+                        ],
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/bookings/([^/]+)(*MARK:/bookings/{bookingId})|/bookings/([^/]+)/payment(*MARK:/bookings/{bookingId}/payment))$#',
                         'paths' => [
-                            '/bookings/{bookingId}' => ['get' => 'get-booking', 'delete' => 'delete-booking'],
-                            '/bookings/{bookingId}/payment' => ['post' => 'create-booking-payment'],
+                            '/bookings/{bookingId}' => [
+                                'get' => ['operationId' => 'get-booking', 'source' => ''],
+                                'delete' => ['operationId' => 'delete-booking', 'source' => ''],
+                            ],
+                            '/bookings/{bookingId}/payment' => [
+                                'post' => ['operationId' => 'create-booking-payment', 'source' => ''],
+                            ],
                         ],
                     ],
                 ]],
@@ -45,15 +53,23 @@ final class ProvidesTrainTravel
             'hostless' => [
                 'static' => ['' => [
                     'static' => [
-                        '/stations' => ['get' => 'get-stations'],
-                        '/trips' => ['get' => 'get-trips'],
-                        '/bookings' => ['get' => 'get-bookings', 'post' => 'create-booking'],
+                        '/stations' => ['get' => ['operationId' => 'get-stations', 'source' => '']],
+                        '/trips' => ['get' => ['operationId' => 'get-trips', 'source' => '']],
+                        '/bookings' => [
+                            'get' => ['operationId' => 'get-bookings', 'source' => ''],
+                            'post' => ['operationId' => 'create-booking', 'source' => '']
+                        ],
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/bookings/([^/]+)(*MARK:/bookings/{bookingId})|/bookings/([^/]+)/payment(*MARK:/bookings/{bookingId}/payment))$#',
                         'paths' => [
-                            '/bookings/{bookingId}' => ['get' => 'get-booking', 'delete' => 'delete-booking'],
-                            '/bookings/{bookingId}/payment' => ['post' => 'create-booking-payment'],
+                            '/bookings/{bookingId}' => [
+                                'get' => ['operationId' => 'get-booking', 'source' => ''],
+                                'delete' => ['operationId' => 'delete-booking', 'source' => '']
+                            ],
+                            '/bookings/{bookingId}/payment' => [
+                                'post' => ['operationId' => 'create-booking-payment', 'source' => '']
+                            ],
                         ],
                     ],
                 ]],

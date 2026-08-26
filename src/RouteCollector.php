@@ -10,14 +10,14 @@ use Membrane\OpenAPIRouter\Route\Server;
 
 class RouteCollector
 {
-    public function collect(V30\OpenAPI|V31\OpenAPI $openApi): RouteCollection
+    public function collect(V30\OpenAPI|V31\OpenAPI $openApi, string $source = ''): RouteCollection
     {
         $collection = [];
 
         foreach ($openApi->paths as $path => $pathObject) {
             foreach ($pathObject->getOperations() as $method => $operation) {
                 foreach ($operation->servers as $server) {
-                    $collection[$server->url] ??= new Server($server->url);
+                    $collection[$server->url] ??= new Server($server->url, $source);
                     $collection[$server->url]->addRoute(
                         $path,
                         $method,

@@ -94,12 +94,17 @@ class ServerTest extends TestCase
     public static function provideServersToJsonSerialize(): Generator
     {
         $expected = [
-            'static' => ['/path' => ['get' => 'get-path', 'post' => 'post-path']],
+            'static' => ['/path' => [
+                'get' => ['operationId' => 'get-path', 'source' => ''],
+                'post' => ['operationId' => 'post-path', 'source' => '']]
+            ],
             'dynamic' => [
                 'regex' => '#^(?|/([^/]+)/path(*MARK:/{another}/path)|/([^/]+)/([^/]+)/path(*MARK:/{yet}/{another}/path))$#',
                 'paths' => [
-                    '/{another}/path' => ['get' => 'get-another-path'],
-                    '/{yet}/{another}/path' => ['delete' => 'delete-yet-another-path'],
+                    '/{another}/path' => ['get' => ['operationId' => 'get-another-path', 'source' => '']],
+                    '/{yet}/{another}/path' => [
+                        'delete' => ['operationId' => 'delete-yet-another-path', 'source' => '']
+                    ],
                 ],
             ],
         ];
