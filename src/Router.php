@@ -15,22 +15,28 @@ class Router
     ) {
     }
 
-    public function route(string $url, string $method): string
+    public function match(string $url, string $method): RouteMatch
     {
         $hostedMatch = $this->routeServer($this->routeCollection->routes['hosted'], $url, $method);
         if ($hostedMatch !== null) {
-            return $hostedMatch['operationId'];
+            return new RouteMatch(...$hostedMatch);
         }
 
         $hostlessUrl = parse_url($url, PHP_URL_PATH);
         if ($hostlessUrl !== null && $hostlessUrl !== false) {
             $hostlessMatch = $this->routeServer($this->routeCollection->routes['hostless'], $hostlessUrl, $method);
             if ($hostlessMatch !== null) {
-                return $hostlessMatch['operationId'];
+                return new RouteMatch(...$hostlessMatch);
             }
         }
 
         throw CannotRouteRequest::fromErrorCode($this->errorCode);
+    }
+
+    /** @deprecated Use match instead for more route information */
+    public function route(string $url, string $method): string
+    {
+        return $this->match($url, $method)->operationId;
     }
 
     /**

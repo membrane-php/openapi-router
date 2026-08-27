@@ -43,7 +43,7 @@ class CacheOpenAPIRoutesTest extends TestCase
         mkdir($cache);
         chmod($cache, 0444);
 
-        self::assertFalse($this->sut->cache($this->fixtures . 'docs/petstore-expanded.json', $cache));
+        self::assertFalse($this->sut->cache(['' => $this->fixtures . 'docs/petstore-expanded.json'], $cache));
     }
 
     #[Test]
@@ -55,7 +55,7 @@ class CacheOpenAPIRoutesTest extends TestCase
             json_encode(['openapi' => '3.0.0', 'info' => ['title' => '', 'version' => '1.0.0'], 'paths' => []])
         );
 
-        self::assertFalse($this->sut->cache($openAPIFilePath, $this->root . '/cache/routes.php'));
+        self::assertFalse($this->sut->cache(['' => $openAPIFilePath], $this->root . '/cache/routes.php'));
     }
 
     #[Test]
@@ -65,7 +65,7 @@ class CacheOpenAPIRoutesTest extends TestCase
 
         self::assertTrue(file_exists($filePath));
 
-        self::assertFalse($this->sut->cache($filePath, $this->root . '/cache/routes.php'));
+        self::assertFalse($this->sut->cache(['' => $filePath], $this->root . '/cache/routes.php'));
     }
 
     #[Test]
@@ -76,7 +76,7 @@ class CacheOpenAPIRoutesTest extends TestCase
     ): void {
         $cachePath = vfsStream::url('root/cache/routes.php');
 
-        self::assertTrue($this->sut->cache($apiPath, $cachePath));
+        self::assertTrue($this->sut->cache(['' => $apiPath], $cachePath));
 
         $actualRouteCollection = eval('?>' . file_get_contents($cachePath));
 
@@ -91,7 +91,7 @@ class CacheOpenAPIRoutesTest extends TestCase
     ): void {
         $cachePath = vfsStream::url('root/cache/routes.php');
 
-        self::assertTrue($this->sut->cache($apiPath, $cachePath, true));
+        self::assertTrue($this->sut->cache(['' => $apiPath], $cachePath, true));
 
         $actual = eval('?>' . file_get_contents($cachePath));
 

@@ -19,8 +19,9 @@ class CacheOpenAPIRoutes
     ) {
     }
 
+    /** @param $openAPIFilePaths string[] */
     public function cache(
-        string $openAPIFilePath,
+        array $openAPIFilePaths,
         string $cacheDestination,
         bool $ignoreServers = false,
         //@todo add support for this in the reader first
@@ -35,18 +36,24 @@ class CacheOpenAPIRoutes
             return false;
         }
 
+        $openApis = [];
+
         try {
-            $openApi = (new MembraneReader([
-                OpenAPIVersion::Version_3_0,
-                OpenAPIVersion::Version_3_1
-            ]))->readFromAbsoluteFilePath($openAPIFilePath);
+            foreach ($openAPIFilePaths as $name => $openAPIFilePath) {
+                $openApi = new MembraneReader([
+                    OpenAPIVersion::Version_3_0,
+                    OpenAPIVersion::Version_3_1
+                ])->readFromAbsoluteFilePath($openAPIFilePath);
+
+                if ($ignoreServers) {
+                    $openApi = $openApi->withoutServers();
+                }
+
+                $openApis[$name] = $openApi;
+            }
         } catch (CannotRead $e) {
             $this->logger->error($e->getMessage());
             return false;
-        }
-
-        if ($ignoreServers) {
-            $openApi = $openApi->withoutServers();
         }
 
         //@todo add support for this in reader first
@@ -55,7 +62,7 @@ class CacheOpenAPIRoutes
         // }
 
         try {
-            $routeCollection = (new RouteCollector())->collect($openApi);
+            $routeCollection = (new RouteCollector())->collectMany($openApis);
         } catch (CannotCollectRoutes $e) {
             $this->logger->error($e->getMessage());
             return false;

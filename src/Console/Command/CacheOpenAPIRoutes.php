@@ -63,7 +63,7 @@ class CacheOpenAPIRoutes extends Command
         $logger = new ConsoleLogger($output);
 
         return (new Service\CacheOpenAPIRoutes($logger))->cache(
-            $openAPIFilePath,
+            ['' => $openAPIFilePath],
             $destination,
             $ignoreServers,
             // @todo add support this in the reader first

@@ -290,4 +290,21 @@ class RouterTest extends TestCase
 
         self::assertSame('first', $priority);
     }
+
+    #[Test, TestDox('Servers are prioritised by length and number of dynamic components')]
+    #[DataProvider('provideServersToPrioritise')]
+    public function testMatch(string $url, string $openAPI): void
+    {
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
+            ->readFromString($openAPI, FileFormat::Json);
+
+        $routeCollection = (new RouteCollector())
+            ->collectMany(['source.json' => $openAPI]);
+
+        $routeMatch = (new Router($routeCollection))
+            ->match($url, 'get');
+
+        self::assertSame('first', $routeMatch->operationId);
+        self::assertSame('source.json', $routeMatch->source);
+    }
 }
