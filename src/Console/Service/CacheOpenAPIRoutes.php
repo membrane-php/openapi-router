@@ -19,7 +19,7 @@ class CacheOpenAPIRoutes
     ) {
     }
 
-    /** @param $openAPIFilePaths string[] */
+    /** @param string[] $openAPIFilePaths */
     public function cache(
         array $openAPIFilePaths,
         string $cacheDestination,

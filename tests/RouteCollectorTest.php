@@ -74,12 +74,14 @@ class RouteCollectorTest extends TestCase
             OpenAPIVersion::Version_3_1,
         ]))->readFromAbsoluteFilePath($apiFilePath);
 
-        self::assertEquals($expected, (new RouteCollector())->collect($openAPI));
+        self::assertEquals($expected, new RouteCollector()->collect($openAPI));
     }
 
     #[Test]
     public function collectManyTest(): void
     {
+
+
         $expected = new RouteCollection(
             [
                 'hosted' => [
@@ -89,11 +91,11 @@ class RouteCollectorTest extends TestCase
                                 '/pets' => [
                                     'get' => [
                                         'operationId' => 'findPets',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/docs/petstore-expanded.json',
+                                        'source' => ProvidesPetstoreExpanded::getFilePath(),
                                     ],
                                     'post' => [
                                         'operationId' => 'addPet',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/docs/petstore-expanded.json',
+                                        'source' => ProvidesPetstoreExpanded::getFilePath(),
                                     ],
                                 ],
                             ],
@@ -103,11 +105,11 @@ class RouteCollectorTest extends TestCase
                                     '/pets/{id}' => [
                                         'delete' => [
                                             'operationId' => 'deletePet',
-                                            'source' => '/home/imhotek/git/openapi-router/tests/fixtures/docs/petstore-expanded.json',
+                                            'source' => ProvidesPetstoreExpanded::getFilePath(),
                                         ],
                                         'get' => [
                                             'operationId' => 'find pet by id',
-                                            'source' => '/home/imhotek/git/openapi-router/tests/fixtures/docs/petstore-expanded.json',
+                                            'source' => ProvidesPetstoreExpanded::getFilePath(),
                                         ],
                                     ],
                                 ],
@@ -118,23 +120,23 @@ class RouteCollectorTest extends TestCase
                                 '/stations' => [
                                     'get' => [
                                         'operationId' => 'get-stations',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                        'source' => ProvidesTrainTravel::getFilePath(),
                                     ],
                                 ],
                                 '/trips' => [
                                     'get' => [
                                         'operationId' => 'get-trips',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                        'source' => ProvidesTrainTravel::getFilePath(),
                                     ],
                                 ],
                                 '/bookings' => [
                                     'get' => [
                                         'operationId' => 'get-bookings',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                        'source' => ProvidesTrainTravel::getFilePath(),
                                     ],
                                     'post' => [
                                         'operationId' => 'create-booking',
-                                        'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                        'source' => ProvidesTrainTravel::getFilePath(),
                                     ],
                                 ],
                             ],
@@ -144,17 +146,17 @@ class RouteCollectorTest extends TestCase
                                     '/bookings/{bookingId}' => [
                                         'delete' => [
                                             'operationId' => 'delete-booking',
-                                            'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                            'source' => ProvidesTrainTravel::getFilePath(),
                                         ],
                                         'get' => [
                                             'operationId' => 'get-booking',
-                                            'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                            'source' => ProvidesTrainTravel::getFilePath(),
                                         ],
                                     ],
                                     '/bookings/{bookingId}/payment' => [
                                         'post' => [
                                             'operationId' => 'create-booking-payment',
-                                            'source' => '/home/imhotek/git/openapi-router/tests/fixtures/train-travel-api.yaml',
+                                            'source' => ProvidesTrainTravel::getFilePath(),
                                         ],
                                     ],
                                 ],
