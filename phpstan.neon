@@ -1,4 +1,8 @@
 parameters:
-	level: 9
-	paths:
-		- src
+    typeAliases:
+        RouteInfo: 'array{operationId: string, source: string}'
+        PathInfo: 'array<string, RouteInfo>'
+        Paths: 'array<string, PathInfo>'
+    level: 9
+    paths:
+        - src

@@ -69,7 +69,7 @@ class PathTest extends TestCase
 
         self::assertTrue($sut->isEmpty());
 
-        $sut->addRoute('get', 'get-operation-id');
+        $sut->addRoute('get', 'get-operation-id', '');
 
         self::assertFalse($sut->isEmpty());
     }
@@ -77,9 +77,9 @@ class PathTest extends TestCase
     public static function providePathsToJsonSerialize(): Generator
     {
         $expected = [
-            'delete' => 'delete-operation',
-            'get' => 'get-operation',
-            'post' => 'post-operation'
+            'delete' => ['operationId' => 'delete-operation', 'source' => ''],
+            'get' => ['operationId' => 'get-operation', 'source' => ''],
+            'post' => ['operationId' => 'post-operation', 'source' => ''],
         ];
 
         $operations = [
@@ -90,7 +90,7 @@ class PathTest extends TestCase
 
         yield [
             $expected,
-            (function() use ($operations) {
+            (function () use ($operations) {
                 $sut = new Path('/path');
                 foreach ($operations as $operation) {
                     $sut->addRoute(...$operation);
@@ -100,7 +100,7 @@ class PathTest extends TestCase
         ];
         yield [
             $expected,
-            (function() use ($operations) {
+            (function () use ($operations) {
                 $sut = new Path('/path');
                 foreach (array_reverse($operations) as $operation) {
                     $sut->addRoute(...$operation);
@@ -115,9 +115,15 @@ class PathTest extends TestCase
     {
         $sut = new Path('/path');
 
-        $sut->addRoute('get', 'get-operation-id');
-        $sut->addRoute('post', 'post-operation-id');
+        $sut->addRoute('get', 'get-operation-id', '');
+        $sut->addRoute('post', 'post-operation-id', '');
 
-        self::assertSame(['get' => 'get-operation-id', 'post' => 'post-operation-id'], $sut->jsonSerialize());
+        self::assertSame(
+            [
+                'get' => ['operationId' => 'get-operation-id', 'source' => ''],
+                'post' => ['operationId' => 'post-operation-id', 'source' => ''],
+            ],
+            $sut->jsonSerialize()
+        );
     }
 }

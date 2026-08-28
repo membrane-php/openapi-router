@@ -12,27 +12,27 @@ final class RouteCollection
      * @param  array{
      *              'hosted' : array{
      *                  'static': array<array{
-     *                      'static': string[][],
-     *                      'dynamic': array{'regex': string, 'paths': string[][]}
+     *                      'static': Paths,
+     *                      'dynamic': array{'regex': string, 'paths': Paths}
      *                  }>,
      *                  'dynamic': array{
      *                      'regex': string,
      *                      'servers': array<array{
-     *                          'static': string[][],
-     *                          'dynamic': array{'regex': string, 'paths': string[][]}
+     *                          'static': Paths,
+     *                          'dynamic': array{'regex': string, 'paths': Paths}
      *                      }>
      *                  }
      *              },
      *              'hostless' : array{
      *                  'static': array<array{
-     *                      'static': string[][],
-     *                      'dynamic': array{'regex': string, 'paths': string[][]}
+     *                      'static': Paths,
+     *                      'dynamic': array{'regex': string, 'paths': Paths}
      *                  }>,
      *                  'dynamic': array{
      *                      'regex': string,
      *                      'servers': array<array{
-     *                          'static': string[][],
-     *                          'dynamic': array{'regex': string, 'paths': string[][]}
+     *                          'static': Paths,
+     *                          'dynamic': array{'regex': string, 'paths': Paths}
      *                      }>
      *                  }
      *              }

@@ -36,13 +36,13 @@ class RouterTest extends TestCase
                 Exception\CannotRouteRequest::notFound(),
                 'https://hatshop.dapper.net/api/pets',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore-expanded: correct static server url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
                 'http://petstore.swagger.io/api/hats',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'WeirdAndWonderful: correct dynamic erver url but incorrect path' => [
                 Exception\CannotRouteRequest::notFound(),
@@ -54,7 +54,7 @@ class RouterTest extends TestCase
                 Exception\CannotRouteRequest::methodNotAllowed(),
                 'http://petstore.swagger.io/api/pets',
                 'delete',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
         ];
     }
@@ -81,19 +81,19 @@ class RouterTest extends TestCase
                 'findPets',
                 'http://petstore.swagger.io/api/pets',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore: /pets/{id} path, get method' => [
                 'find pet by id',
                 'http://petstore.swagger.io/api/pets/1',
                 'get',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'petstore: /pets/{id} path, delete method' => [
                 'deletePet',
                 'http://petstore.swagger.io/api/pets/1',
                 'delete',
-                ProvidesPetstoreExpanded::getRoutes(),
+                ProvidesPetstoreExpanded::getRouteCollection(),
             ],
             'WeirdAndWonderful: /v1/or path, post method' => [
                 'post-or',
@@ -289,5 +289,22 @@ class RouterTest extends TestCase
             ->route($url, 'get');
 
         self::assertSame('first', $priority);
+    }
+
+    #[Test, TestDox('Servers are prioritised by length and number of dynamic components')]
+    #[DataProvider('provideServersToPrioritise')]
+    public function testMatch(string $url, string $openAPI): void
+    {
+        $openAPI = (new MembraneReader([OpenAPIVersion::Version_3_0]))
+            ->readFromString($openAPI, FileFormat::Json);
+
+        $routeCollection = (new RouteCollector())
+            ->collectMany(['source.json' => $openAPI]);
+
+        $routeMatch = (new Router($routeCollection))
+            ->match($url, 'get');
+
+        self::assertSame('first', $routeMatch->operationId);
+        self::assertSame('source.json', $routeMatch->source);
     }
 }

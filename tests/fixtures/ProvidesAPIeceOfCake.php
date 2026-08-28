@@ -24,22 +24,22 @@ final class ProvidesAPIeceOfCake
                 'static' => ['' => [
                     'static' => [
                         '/cakes/sponge' => [
-                            'get' => 'findSpongeCakes',
+                            'get' => ['operationId' => 'findSpongeCakes', 'source' => ''],
                         ]
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/cakes/([^/]+)(*MARK:/cakes/{icing})|/([^/]+)/sponge(*MARK:/{cakeType}/sponge)|/([^/]+)/([^/]+)(*MARK:/{cakeType}/{icing}))$#',
                         'paths' => [
                             '/cakes/{icing}' => [
-                                'get' => 'findCakesByIcing',
-                                'post' => 'addCakesByIcing',
+                                'get' => ['operationId' => 'findCakesByIcing', 'source' => ''],
+                                'post' => ['operationId' => 'addCakesByIcing', 'source' => ''],
                             ],
                             '/{cakeType}/sponge' => [
-                                'get' => 'findSpongeByDesserts',
+                                'get' => ['operationId' => 'findSpongeByDesserts', 'source' => ''],
                             ],
                             '/{cakeType}/{icing}' => [
-                                'get' => 'findDessertByIcing',
-                                'post' => 'addDessertByIcing',
+                                'get' => ['operationId' => 'findDessertByIcing', 'source' => ''],
+                                'post' => ['operationId' => 'addDessertByIcing', 'source' => ''],
                             ],
                         ]
                     ],
@@ -60,22 +60,22 @@ final class ProvidesAPIeceOfCake
                 'static' => ['' => [
                     'static' => [
                         '/cakes/sponge' => [
-                            'get' => 'findSpongeCakes',
+                            'get' => ['operationId' => 'findSpongeCakes', 'source' => ''],
                         ]
                     ],
                     'dynamic' => [
                         'regex' => '#^(?|/cakes/([^/]+)(*MARK:/cakes/{icing})|/([^/]+)/sponge(*MARK:/{cakeType}/sponge)|/([^/]+)/([^/]+)(*MARK:/{cakeType}/{icing}))$#',
                         'paths' => [
                             '/cakes/{icing}' => [
-                                'get' => 'findCakesByIcing',
-                                'post' => 'addCakesByIcing',
+                                'get' => ['operationId' => 'findCakesByIcing', 'source' => ''],
+                                'post' => ['operationId' => 'addCakesByIcing', 'source' => ''],
                             ],
                             '/{cakeType}/sponge' => [
-                                'get' => 'findSpongeByDesserts',
+                                'get' => ['operationId' => 'findSpongeByDesserts', 'source' => ''],
                             ],
                             '/{cakeType}/{icing}' => [
-                                'get' => 'findDessertByIcing',
-                                'post' => 'addDessertByIcing',
+                                'get' => ['operationId' => 'findDessertByIcing', 'source' => ''],
+                                'post' => ['operationId' => 'addDessertByIcing', 'source' => ''],
                             ],
                         ]
                     ],

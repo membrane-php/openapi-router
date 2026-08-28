@@ -9,7 +9,7 @@ use JsonSerializable;
 final class Path implements JsonSerializable
 {
     public readonly string $regex;
-    /** @var array<string, string> */
+    /** @var array<string, array{operationId: string, source: string}> */
     private array $operations = [];
 
     public function __construct(
@@ -20,9 +20,9 @@ final class Path implements JsonSerializable
         $this->regex = $regex;
     }
 
-    public function addRoute(string $method, string $operationId): void
+    public function addRoute(string $method, string $operationId, string $source): void
     {
-        $this->operations[$method] = $operationId;
+        $this->operations[$method] = ['operationId' => $operationId, 'source' => $source];
     }
 
     public function isDynamic(): bool
@@ -40,7 +40,7 @@ final class Path implements JsonSerializable
         return count($this->operations) === 0;
     }
 
-    /** @return array<string, string> */
+    /** @return array<string, array{operationId: string, source: string}> */
     public function jsonSerialize(): array
     {
         $operations = $this->operations;

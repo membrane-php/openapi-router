@@ -14,12 +14,12 @@ final class ProvidesApiAndRoutes
     {
         yield 'petstore-expanded' => [
             ProvidesPetstoreExpanded::getFilePath(),
-            ProvidesPetstoreExpanded::getRoutes(),
+            ProvidesPetstoreExpanded::getRouteCollection(),
         ];
 
         yield 'train-travel' => [
             ProvidesTrainTravel::getFilePath(),
-            ProvidesTrainTravel::getRoutes()
+            ProvidesTrainTravel::getRouteCollection()
         ];
 
         yield 'APIece of Cake' => [
